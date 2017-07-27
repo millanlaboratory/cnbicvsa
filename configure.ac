@@ -26,7 +26,7 @@ save_LIBS="$LIBS"
 
 AC_SEARCH_LIBS_CLASS([CcFile], [cnbicore], [#include <cnbicore/CcFile.hpp>], ,
 			AC_MSG_ERROR([The cnbicore library cannot be found.]))
-AC_SEARCH_LIBS_CLASS([Shape], [cnbidraw], [#include <cnbidraw/Shape.hpp>], ,
+PKG_CHECK_MODULES(CNBIDRAW, [cnbidraw], [#include <cnbidraw/Shape.hpp>], ,
 			AC_MSG_ERROR([The cnbidraw library cannot be found.]))
 LIBS="$save_LIBS"
 
