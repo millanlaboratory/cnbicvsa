@@ -2,7 +2,7 @@
 .libs
 *.lo
 *.o
-*.pc
+cnbicvsa.pc
 *.in
 *.la
 *.swp
