@@ -7,3 +7,6 @@ cnbicvsa.pc
 *.la
 *.swp
 Makefile
+sandbox
+cvsa_neglect_offline
+core
