@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 	draw::Engine engine;
 	draw::Events events(&engine);
 
-	cvsa::InfiniteBar bar(0.6, 0.1, 3, 0.023);
+	cvsa::InfiniteBar bar(0.6, 0.1, 7, 0.05);
 
 	bar.Create();
 
