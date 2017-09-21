@@ -46,5 +46,6 @@ AC_SUBST(AM_LDFLAGS)
 AC_CONFIG_FILES([
 Makefile 
 src/Makefile
-src/cnbicvsa.pc])
+src/cnbicvsa.pc
+tests/Makefile])
 AC_OUTPUT
