@@ -8,9 +8,7 @@ libcnbicvsa_include_HEADERS = InfiniteBar.hpp
 libcnbicvsa_la_SOURCES = InfiniteBar.hpp \
 						 InfiniteBar.cpp \
 						 ColorFeedback.hpp \
-						 ColorFeedback.cpp \
-						 TargetGallery.hpp \
-						 TargetGallery.cpp
+						 ColorFeedback.cpp
 
 libcnbicvsa_la_LIBADD = -ldrawtk -lcnbicore -lcnbidraw
 libcnbicvsa_la_LDFLAGS = $(AM_CFLAGS) \
