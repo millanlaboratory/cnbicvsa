@@ -67,9 +67,6 @@ int main(int argc, char** argv) {
     // Draw elements setup
     engine->Open();
     events->Open();
-    fix->Create();
-    cue->Create();
-    bar->Create();
     bar->Move(0.0f, -0.2f);
     cue->Rotate(40.0f);
 	txttrl->SetFont(font);

@@ -16,13 +16,15 @@ class ColorFeedback : public draw::Shape {
 		ColorFeedback(void);
 		virtual ~ColorFeedback(void);
 
-		void  Create(void);
 		bool  Update(float value);
 		void  Reset(void);
 		void  SetDiscrete(unsigned int mode);
 		float GetValue(void);
 		void  SetThreshold(float th);
 
+	protected:
+		void  CreateFill(void);
+		void  CreateStroke(void);
 
 	public:
 		const static unsigned int AsBoom    = 1;
@@ -30,7 +32,7 @@ class ColorFeedback : public draw::Shape {
 
 	private:
 		draw::Ring*		ring_;
-		draw::Circle*	fill_;
+		draw::Circle*	bg_;
 		draw::Circle*	feedback_;
 
 		float	value_;
@@ -41,8 +43,8 @@ class ColorFeedback : public draw::Shape {
 		float					ring_radius_;
 		float					ring_thick_;
 		std::array<float, 4>	ring_color_;
-		float					fill_radius_;
-		std::array<float, 4>	fill_color_;
+		float					bg_radius_;
+		std::array<float, 4>	bg_color_;
 		float					feedback_radius_;
 		std::array<float, 4>	feedback_color_;
 };

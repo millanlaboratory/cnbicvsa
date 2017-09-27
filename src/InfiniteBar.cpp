@@ -10,12 +10,11 @@ InfiniteBar::InfiniteBar(float wbar, float hbar, unsigned int nobj, float wobj) 
 
     this->height_ = hbar-0.01;
     this->width_  = wbar;
-    this->filled_ = 1;
     
-    this->color_[0] = dtk_black[0];
-    this->color_[1] = dtk_black[1];
-    this->color_[2] = dtk_black[2];
-    this->color_[3] = dtk_black[3];
+    this->fill_color_[0] = dtk_black[0];
+    this->fill_color_[1] = dtk_black[1];
+    this->fill_color_[2] = dtk_black[2];
+    this->fill_color_[3] = dtk_black[3];
     
     
     this->wobj_ = wobj;
@@ -43,7 +42,7 @@ InfiniteBar::~InfiniteBar(void) {
     delete[] this->xbars_;
 }
 
-void InfiniteBar::Create(void) {
+void InfiniteBar::CreateFill(void) {
 
 
     this->WaitShape();
@@ -53,7 +52,7 @@ void InfiniteBar::Create(void) {
     	this->bars_[i] = dtk_create_rectangle_hw(nullptr, 
 						this->orig_x_, this->orig_y_,
 						this->wobj_, this->height_,
-						this->filled_, 
+						1, 
 						dtk_aluminium2_dark);
     	this->xbars_[i] = this->orig_x_;
     }
@@ -63,11 +62,11 @@ void InfiniteBar::Create(void) {
     	this->border_ = dtk_create_rectangle_hw(this->border_, 
     						this->orig_x_, this->orig_y_,
     						this->width_,  this->height_+0.01,
-    						this->filled_, dtk_white), 
+    						1, dtk_white), 
     	this->bg_ = dtk_create_rectangle_hw(this->bg_, 
     					    this->orig_x_, this->orig_y_,
 					    this->width_,  this->height_,
-    					    this->filled_, this->color_), 
+    					    1, this->fill_color_), 
     	
     	this->cbars_ = dtk_create_composite_shape(this->cbars_, 
     						this->nobj_, 
@@ -77,14 +76,14 @@ void InfiniteBar::Create(void) {
     					    this->orig_x_, this->orig_y_,
     					    this->wobj_+this->iobj_, 
 					    this->height_,
-    					    this->filled_, dtk_black), 
+    					    1, dtk_black), 
     
     
     	this->rmask_ = dtk_create_rectangle_hw(this->rmask_, 
 					    this->orig_x_, this->orig_y_,
     					    this->wobj_+this->iobj_, 
 					    this->height_,
-    					    this->filled_, dtk_black)
+    					    1, dtk_black)
     };
 
     float xstart = -this->width_/2.0f;
@@ -101,6 +100,9 @@ void InfiniteBar::Create(void) {
 						sizeof(scene)/sizeof(scene[0]),
 						scene, 1);
     this->PostShape();
+}
+
+void InfiniteBar::CreateStroke(void) {
 }
 
 void InfiniteBar::Update(float dx) {

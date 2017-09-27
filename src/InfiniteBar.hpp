@@ -13,8 +13,11 @@ class InfiniteBar : public draw::Shape {
 	InfiniteBar(float width, float height, unsigned int nobj, float wobj);
 	virtual ~InfiniteBar(void);
 
-	void Create(void);
 	void Update(float dx);
+	
+	protected:
+	void CreateFill(void);
+	void CreateStroke(void);
 
     private:
 

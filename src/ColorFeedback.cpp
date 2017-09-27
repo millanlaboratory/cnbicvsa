@@ -13,8 +13,8 @@ ColorFeedback::ColorFeedback(void) {
 	this->ring_thick_  = CNBICVSA_COLORFEEDBACK_RING_THICK;
 	this->ring_color_  = {169.0f/256.0f, 169.0f/256.0f, 169.0f/256.0f, 1.0f};
 	
-	this->fill_radius_ = CNBICVSA_COLORFEEDBACK_FILL_RADIUS;
-	this->fill_color_  = {57.0f/256.0f, 57.0f/256.0f, 57.0f/256.0f, 1.0f};
+	this->bg_radius_ = CNBICVSA_COLORFEEDBACK_FILL_RADIUS;
+	this->bg_color_  = {57.0f/256.0f, 57.0f/256.0f, 57.0f/256.0f, 1.0f};
 	
 	this->feedback_radius_ = CNBICVSA_COLORFEEDBACK_FEEDBACK_RADIUS;
 	this->feedback_color_  = {18.0f/256.0f, 86.0f/256.0f, 0.0f, 0.0f};
@@ -26,32 +26,37 @@ ColorFeedback::ColorFeedback(void) {
 
 	/*** Create inner shapes ***/
 	this->ring_ = new draw::Ring(this->ring_radius_, this->ring_thick_, this->ring_color_.data(), 500);
-	this->fill_ = new draw::Circle(this->fill_radius_, this->fill_color_.data());
+	this->bg_ = new draw::Circle(this->bg_radius_, this->bg_color_.data());
 	this->feedback_ = new draw::Circle(this->feedback_radius_, this->feedback_color_.data());
+
+	// Create fill shape
+	this->CreateFill();
+
+	// Create shape
+	this->Create();
 }
 
 ColorFeedback::~ColorFeedback(void) {
 }
 
-void ColorFeedback::Create(void) {
+void ColorFeedback::CreateFill(void) {
 
-
-	this->fill_->Create();
-	this->feedback_->Create();
-	this->ring_->Create();
 
 	this->WaitShape();
 
 
-	dtk_hshape shps[] = { this->fill_->shp_ptr_, 
+	dtk_hshape shps[] = { this->bg_->shp_ptr_, 
 					      this->feedback_->shp_ptr_, 
 						  this->ring_->shp_ptr_};	
 
-	this->shp_ptr_ = dtk_create_composite_shape(this->shp_ptr_, 3, shps, 1);
+	this->fill_ptr_ = dtk_create_composite_shape(this->fill_ptr_, 3, shps, 1);
 
 
 	this->PostShape();
 
+}
+
+void ColorFeedback::CreateStroke(void) {
 }
 
 float ColorFeedback::GetValue(void) {

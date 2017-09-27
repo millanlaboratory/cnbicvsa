@@ -8,5 +8,6 @@ cnbicvsa.pc
 *.swp
 Makefile
 sandbox
-cvsa_neglect_offline
+infinitebar
+cvsa_feedback_offline
 core

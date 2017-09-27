@@ -13,6 +13,7 @@ namespace cnbi {
 
 typedef std::vector<unsigned int> Entry;
 typedef std::vector<Entry> List;
+typedef std::vector<Entry>::iterator ListIt;
 
 
 class TargetControl {
@@ -21,6 +22,13 @@ class TargetControl {
 		TargetControl(unsigned int ntargets, unsigned int nobjects, unsigned int nrepetitions);
 		virtual ~TargetControl(void);
 
+		unsigned int Size(void);
+		bool Next(void);
+		bool Previous(void);
+		unsigned int At(unsigned int pos);
+
+		ListIt Begin(void);
+		ListIt End(void);
 
 	public:
 		List nchoosek(unsigned int n, unsigned int k);
@@ -31,7 +39,8 @@ class TargetControl {
 		size_t	nobjects_;
 		size_t	nrepetitions_;
 
-		List list_;
+		ListIt	iter_;
+		List	list_;
 
 };
 

@@ -18,41 +18,59 @@ TargetControl::TargetControl(unsigned int ntargets, unsigned int nobjects, unsig
 	List list;
 	list = this->nchoosek(this->nobjects_, this->ntargets_);
 
-	printf("list size: %lu\n", list.size());
 	/*** Replicate the list to cover all the repetitions ***/
-	printf("%f\n", std::ceil((float)this->nrepetitions_/(float)list.size()));
 	list = this->replicate(list, std::ceil((float)this->nrepetitions_/(float)list.size()));
-	printf("list size: %lu\n", list.size());
 
 	/*** Shuffle the order of the list ***/
 	std::random_device rd;
 	std::mt19937 g(rd());
 	std::shuffle(list.begin(), list.end(), g);
-	printf("list size: %lu\n", list.size());
 
 	/*** Truncate the list to match the number of repetitions required ***/
 	list.erase(list.begin() + this->nrepetitions_, list.end());
-	printf("list size: %lu\n", list.size());
 
 	/*** Store the list in the internal object list ***/
 	this->list_ = list;
 
+	this->iter_ = this->Begin();
 
-	// TO BE DELETED - ONLY TEST
-	unsigned int count = 0;
-	for(auto it1=this->list_.begin(); it1!=this->list_.end(); ++it1) {
-		count++;
-		printf("[%u]", count);
-		for(auto it2 = (*it1).begin(); it2 != (*it1).end(); ++it2) {
-			printf(" %u", (*it2));
-		}
-		printf("\n");
-	}
-	printf("%lu combinations\n", this->list_.size());
-	
 }
 
 TargetControl::~TargetControl(void) {}
+
+unsigned int TargetControl::Size(void) {
+	return this->list_.size();
+}
+
+ListIt TargetControl::Begin(void) {
+	return this->list_.begin();
+}
+
+ListIt TargetControl::End(void) {
+	return this->list_.end();
+}
+
+bool TargetControl::Next(void) {
+	bool result = false;
+	if(this->iter_ != this->End()) {
+		this->iter_++;
+		result = true;
+	}
+	return result;
+}
+
+bool TargetControl::Previous(void) {
+	bool result = false;
+	if(this->iter_ != this->Begin()) {
+		this->iter_--;
+		result = true;
+	}
+	return result;
+}
+
+unsigned int TargetControl::At(unsigned int pos) {
+	return (*this->iter_).at(pos);
+}
 
 List TargetControl::replicate(List src, unsigned int n) {
 	

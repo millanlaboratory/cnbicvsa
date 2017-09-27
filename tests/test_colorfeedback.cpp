@@ -9,7 +9,7 @@ using namespace cnbi;
 bool quit = false;
 void callback(draw::EventKeyboard* evt) {
 	if(evt->IsPressed(DTKK_ESCAPE))
-		quit = !quit;
+		quit = true;
 }
 
 float sinfunc(float x, float F = 1.0f, float delay = 0.0f) {
@@ -36,9 +36,7 @@ int main(int argc, char** argv) {
 	engine    = new draw::Engine("Test", 1680, 1050);
 	events    = new draw::Events(engine);
 
-
 	engine->Open();
-	cfeedback->Create();
 	cfeedback->SetThreshold(0.9f);
 	engine->Add("cfeedback", cfeedback);
 	
