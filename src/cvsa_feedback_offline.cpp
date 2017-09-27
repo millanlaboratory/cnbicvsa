@@ -2,6 +2,7 @@
 #include <cnbidraw/Events.hpp>
 #include <cnbidraw/EventKeyboard.hpp>
 #include <cnbidraw/Cross.hpp>
+#include <cnbidraw/Arrow.hpp>
 #include "ColorFeedback.hpp"
 #include "Target.hpp"
 #include "TargetControl.hpp"
@@ -16,6 +17,9 @@
 
 #define CVSA_FIXATION_SIZE		CNBICVSA_COLORFEEDBACK_RING_RADIUS*0.4f*2.0f
 #define CVSA_FIXATION_THICK		CVSA_FIXATION_SIZE/4.0f
+
+#define CVSA_CUE_WIDTH			CNBICVSA_COLORFEEDBACK_RING_RADIUS*0.5f*2.0f
+#define CVSA_CUE_HEIGHT			CVSA_CUE_WIDTH/1.0f
 
 #define CVSA_TARGET_WIDTH		0.3f
 #define CVSA_TARGET_HEIGHT		0.3f
@@ -50,6 +54,8 @@ const std::array<float, 4>	dgreen	= {18.0f/256.0f, 86.0f/256.0f, 0.0f, 1.0f};
 const std::array<float, 4>	lgreen	= {31.0f/256.0f, 140.0f/256.0f, 0.0f, 1.0f};
 const std::array<float, 4>	red		= {140.0f/256.0f, 0.0f, 10.0f/256.0f, 1.0f};
 
+const std::array<float, 2>	tangles = {200.0f, 340.0f};
+
 int main(int argc, char** argv) {
 
 
@@ -57,6 +63,7 @@ int main(int argc, char** argv) {
 	draw::Engine*					engine;
 	draw::Events*					events;
 	draw::Cross*					fixation;
+	draw::Arrow*					cue;
 	cvsa::ColorFeedback*			feedback;
 	std::array<cvsa::Target*, 2>	targets;
 	cvsa::Target*					ctarget;
@@ -70,6 +77,9 @@ int main(int argc, char** argv) {
 	events   = new draw::Events(engine);
 	fixation = new draw::Cross(CVSA_FIXATION_SIZE, 
 							   CVSA_FIXATION_THICK, 
+							   white.data());
+	cue		 = new draw::Arrow(CVSA_CUE_WIDTH, 
+							   CVSA_CUE_HEIGHT,
 							   white.data());
 	feedback = new cvsa::ColorFeedback;
 
@@ -98,11 +108,12 @@ int main(int argc, char** argv) {
 	/*** Graphic setup ***/
 	engine->Add("feedback", feedback);
 	engine->Add("fixation", fixation);
+	engine->Add("cue", cue);
 	engine->Add("targetL",  targets.at(0));
 	engine->Add("targetR",  targets.at(1));
 
-	targets.at(0)->SetPosition(200.0f, CVSA_TARGET_DISTANCE);
-	targets.at(1)->SetPosition(340.0f, CVSA_TARGET_DISTANCE);
+	targets.at(0)->SetPosition(tangles.at(0), CVSA_TARGET_DISTANCE);
+	targets.at(1)->SetPosition(tangles.at(1), CVSA_TARGET_DISTANCE);
 	targets.at(0)->SetTime(CVSA_TIMING_TARGETMOVE);
 	targets.at(1)->SetTime(CVSA_TIMING_TARGETMOVE);
 
@@ -120,6 +131,7 @@ int main(int argc, char** argv) {
 		targets.at(0)->Hide();
 		targets.at(1)->Hide();
 		fixation->Hide();
+		cue->Hide();
 		CcTime::Sleep(CVSA_TIMING_ITI);
 
 		// Fixation 
@@ -130,10 +142,18 @@ int main(int argc, char** argv) {
 
 		// Cue
 		ctarget = targets.at(0);
-		if(cTrial % 2 == 0)
+		cue->Rotate(tangles.at(0)+180.0f);
+		if(cTrial % 2 == 0) {
 			ctarget = targets.at(1);
+			cue->Rotate(tangles.at(1)+180.0f);
+		}
+		fixation->Hide();
+		cue->Show();
+		CcTime::Sleep(CVSA_TIMING_CUE);
 		
 		// Feedback (To be random)
+		fixation->Show();
+		cue->Hide();
 		cValue = 0.0f;
 		while(quit == false) {
 			cValue = cValue + 0.01f;
