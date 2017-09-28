@@ -147,7 +147,8 @@ int main(int argc, char** argv) {
 		feedback->SetDiscrete(cvsa::ColorFeedback::AsBoom);
 		CcTime::Sleep(CVSA_TIMING_BOOM);
 
-		// Random time CVSA_TIMING_TARGETMIN-MAX
+		// Random time before target hit
+		CcTime::Sleep(tcontrol->WaitRandom(CVSA_TIMING_TARGETMAX, CVSA_TIMING_TARGETMIN));
 
 		// Target Hit
 		tcontrol->Hit(cTarget, lgreen.data());

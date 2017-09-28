@@ -38,6 +38,7 @@ class TargetControl {
 		void Hit(unsigned int id, const float* color);
 		bool ToCenter(unsigned int id);	
 		void Reset(void);
+		float WaitRandom(float maxtime, float mintime = 0.0f);
 
 		bool Next(void);
 		bool Previous(void);

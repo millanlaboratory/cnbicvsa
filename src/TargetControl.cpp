@@ -83,6 +83,16 @@ void TargetControl::SetTime(float time) {
 	this->time_ = time;
 }
 
+float TargetControl::WaitRandom(float maxtime, float mintime) {
+	
+	float rndn;
+	std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(mintime, maxtime);
+	rndn = dis(gen);
+	return rndn;
+}
+
 void TargetControl::Show(void) {
 
 	unsigned int id = 0;
