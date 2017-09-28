@@ -7,41 +7,67 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <cnbidraw/Gallery.hpp>
 
 namespace cnbi {
     namespace cvsa {
 
 typedef std::vector<unsigned int> Entry;
-typedef std::vector<Entry> List;
-typedef std::vector<Entry>::iterator ListIt;
+typedef std::vector<Entry> Sequence;
+typedef std::vector<Entry>::iterator SequenceIt;
 
+typedef std::vector<std::shared_ptr<draw::Gallery>> List;
+typedef std::vector<std::shared_ptr<draw::Gallery>>::iterator ListIt;
+
+typedef std::array<float, 2> Position;
 
 class TargetControl {
 
 	public:
-		TargetControl(unsigned int ntargets, unsigned int nobjects, unsigned int nrepetitions);
+		TargetControl(const std::string& folder, const std::vector<std::string> ext = {".png"});
 		virtual ~TargetControl(void);
 
-		unsigned int Size(void);
+
+		draw::Gallery* Add(float width, float height, float angle, float radius); 	
+
+		void Generate(unsigned int nrepetitions);
+
+		void SetTime(float time);
+		void Show(void);
+		void Hide(void);
+		void Hit(unsigned int id, const float* color);
+		bool ToCenter(unsigned int id);	
+		void Reset(void);
+
 		bool Next(void);
 		bool Previous(void);
-		unsigned int At(unsigned int pos);
 
-		ListIt Begin(void);
-		ListIt End(void);
-
-	public:
-		List nchoosek(unsigned int n, unsigned int k);
-		List replicate(List src, unsigned int n);
+		SequenceIt Begin(void);
+		SequenceIt End(void);
 
 	private:
-		size_t	ntargets_;
-		size_t	nobjects_;
-		size_t	nrepetitions_;
+		Sequence nchoosek(unsigned int n, unsigned int k);
+		Sequence replicate(Sequence src, unsigned int n);
+		Position tocartesian(float angle, float radius);
 
-		ListIt	iter_;
-		List	list_;
+	private:
+		std::string				 folder_;
+		std::vector<std::string> extensions_;	
+		unsigned int	ntargets_;
+		unsigned int	nobjects_;
+		unsigned int	nrepetitions_;
 
+		Sequence	sequence_;
+		SequenceIt	sequence_it_;
+
+		List		list_;
+		ListIt		list_it_;	
+		std::vector<Position> positions_;
+
+		bool		ismoving_;
+		CcTimeValue timer_;
+		float		time_;
+		float		thick_;
 };
 
 	}

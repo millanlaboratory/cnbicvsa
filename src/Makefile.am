@@ -5,15 +5,12 @@ lib_LTLIBRARIES = libcnbicvsa.la
 libcnbicvsa_includedir = $(includedir)/cnbicvsa
 libcnbicvsa_include_HEADERS = InfiniteBar.hpp \
 						 	  ColorFeedback.hpp \
-							  Target.hpp \
 						 	  TargetControl.hpp
 
 libcnbicvsa_la_SOURCES = InfiniteBar.hpp \
 						 InfiniteBar.cpp \
 						 ColorFeedback.hpp \
 						 ColorFeedback.cpp \
-						 Target.hpp \
-						 Target.cpp \
 						 TargetControl.hpp \
 						 TargetControl.cpp
 

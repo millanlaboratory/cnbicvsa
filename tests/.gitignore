@@ -7,5 +7,5 @@
 *.swp
 Makefile
 test_colorfeedback
-test_targetcontrol
+test_target
 core
