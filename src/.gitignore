@@ -9,5 +9,6 @@ cnbicvsa.pc
 Makefile
 sandbox
 infinitebar
-cvsa_feedback_offline
+cvsa_offline
+cvsa_neglect_offline
 core

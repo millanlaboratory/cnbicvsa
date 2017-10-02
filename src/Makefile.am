@@ -19,9 +19,12 @@ libcnbicvsa_la_LDFLAGS = $(AM_CFLAGS) \
 						-version-info $(CURRENT):$(REVISION):$(AGE)
 
 
-bin_PROGRAMS = cvsa_feedback_offline
-cvsa_feedback_offline_SOURCES = cvsa_feedback_offline.cpp
-cvsa_feedback_offline_LDADD = -lcnbicore -ldrawtk -lcnbidraw $(top_builddir)/src/libcnbicvsa.la
+bin_PROGRAMS = cvsa_offline cvsa_neglect_offline
+cvsa_offline_SOURCES = cvsa_offline.cpp
+cvsa_offline_LDADD = -lcnbicore -ldrawtk -lcnbidraw $(top_builddir)/src/libcnbicvsa.la
+
+cvsa_neglect_offline_SOURCES = cvsa_neglect_offline.cpp
+cvsa_neglect_offline_LDADD = -lcnbicore -ldrawtk -lcnbidraw $(top_builddir)/src/libcnbicvsa.la
 
 noinst_PROGRAMS = sandbox infinitebar
 sandbox_SOURCES = sandbox.cpp
