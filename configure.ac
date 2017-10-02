@@ -47,5 +47,8 @@ AC_CONFIG_FILES([
 Makefile 
 src/Makefile
 src/cnbicvsa.pc
+extra/Makefile
+extra/icons/Makefile
+extra/xml/Makefile
 tests/Makefile])
 AC_OUTPUT
