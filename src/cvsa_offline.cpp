@@ -6,37 +6,13 @@
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
 #include "TargetControl.hpp"
+#include "cvsa_utilities.hpp"
 
 
 // Temporary definitions
-#define CVSA_WINDOW_TITLE		"CVSA calibration"
-#define CVSA_WINDOW_WIDTH		1680
-#define CVSA_WINDOW_HEIGHT		1050
-
-#define CVSA_FIXATION_SIZE		CNBICVSA_COLORFEEDBACK_RING_RADIUS*0.4f*2.0f
-#define CVSA_FIXATION_THICK		CVSA_FIXATION_SIZE/4.0f
-
-#define CVSA_CUE_WIDTH			CNBICVSA_COLORFEEDBACK_RING_RADIUS*0.5f*2.0f
-#define CVSA_CUE_HEIGHT			CVSA_CUE_WIDTH/1.0f
-
-#define CVSA_TARGET_WIDTH		0.3f
-#define CVSA_TARGET_HEIGHT		0.3f
 #define CVSA_TARGET_DISTANCE	1.0f
-#define CVSA_TARGET_FOLDER		"./extra/icons/"
 
 #define CVSA_TRIAL_NUMBER		3
-
-#define CVSA_TIMING_ITI			2000.0f
-#define CVSA_TIMING_FIXATION	2000.0f
-#define CVSA_TIMING_CUE			500.0f
-#define CVSA_TIMING_FEEDBACKMIN	4000.0f
-#define CVSA_TIMING_FEEDBACKMAX	5000.0f
-#define CVSA_TIMING_BOOM		1000.0f
-#define CVSA_TIMING_TARGETMIN	500.0f
-#define CVSA_TIMING_TARGETMAX	1500.0f
-#define CVSA_TIMING_TARGETHIT	1000.0f
-#define CVSA_TIMING_TARGETMOVE	2000.0f
-#define CVSA_TIMING_TARGETSTOP	500.0f
 
 using namespace cnbi;
 
@@ -55,7 +31,23 @@ const std::array<float, 2>	tangles = {200.0f, 340.0f};
 
 int main(int argc, char** argv) {
 
+	/*** CNBI Loop initialization ***/
+	CcCore::OpenLogger("cvsa_offline");
+	CcCore::CatchSIGINT();
+	CcCore::CatchSIGTERM();
+
+
 	/*** Protocol definitions ***/
+	std::string		xmlfile = "./extra/xml/cvsa_template.xml";
+	std::string		mname = "offline";
+	std::string		bname = "cvsa";
+	std::string		tname = "cvsa_brbl";
+	CCfgConfig		config;
+	cvsa::timing_t	cfgtime;
+	cvsa::event_t	cfgevent;
+	cvsa::graphic_t	cfggraph;
+	CCfgTaskset*	taskset = nullptr;
+
 	unsigned int cTarget;
 	float cValue;
 
@@ -70,39 +62,81 @@ int main(int argc, char** argv) {
 	cvsa::TargetControl*			tcontrol;
 
 
+	/*** XML setup ***/
+	// Importing the xml file
+	CcLogInfoS("Importing XML file: " << xmlfile);
+	try {
+		config.ImportFileEx(xmlfile);
+	} catch (XMLException e) {
+		CcLogException(e.Info());
+		exit(1);
+	}
+
+	// Configuration
+	if( (cvsa::xml_configure_taskset(&config, &taskset, mname, bname, tname) == false)||
+		(cvsa::xml_configure_graphics(&config, taskset, &cfggraph) == false) ||
+		(cvsa::xml_configure_events(&config, &cfgevent) == false)		||
+		(cvsa::xml_configure_timings(&config, &cfgtime) == false)) {
+		CcLogFatal("Configuration failed");
+		exit(1);
+	}
+
+	for(auto it=cfggraph.target.angles.begin(); it!=cfggraph.target.angles.end(); ++it) {
+		printf("%u - %f\n", it->first, it->second);
+	}
+	
+	for(auto it=cfggraph.target.radius.begin(); it!=cfggraph.target.radius.end(); ++it) {
+		printf("%u - %f\n", it->first, it->second);
+	}
+
 	/*** Graphic initialization ***/
-	engine   = new draw::Engine(CVSA_WINDOW_TITLE, 
-								CVSA_WINDOW_WIDTH, 
-								CVSA_WINDOW_HEIGHT); 
+	if(cvsa::setup_graphic_engine(engine, &cfggraph) == false)
+		exit(1);
+	if(cvsa::setup_graphic_events(events, engine) == false)
+		exit(1);
+	if(cvsa::setup_graphic_feedback(feedback, &cfggraph, engine) == false)
+		exit(1);
+	if(cvsa::setup_graphic_cue(cue, &cfggraph, engine) == false)
+		exit(1);
+	if(cvsa::setup_graphic_fixation(fixation, &cfggraph, engine) == false)
+		exit(1);
+	if(cvsa::setup_graphic_target(tcontrol, &cfggraph, taskset, engine) == false)
+		exit(1);
+	/*
+	engine   = new draw::Engine(cfggraph.window.title, 
+								cfggraph.window.width, 
+								cfggraph.window.height); 
 	events   = new draw::Events(engine);
-	fixation = new draw::Cross(CVSA_FIXATION_SIZE, 
-							   CVSA_FIXATION_THICK, 
+	fixation = new draw::Cross(cfggraph.fixation.size, 
+							   cfggraph.fixation.thick, 
 							   white.data());
-	cue		 = new draw::Arrow(CVSA_CUE_WIDTH, 
-							   CVSA_CUE_HEIGHT,
+	cue		 = new draw::Arrow(cfggraph.cue.width, 
+							   cfggraph.cue.height,
 							   white.data());
 	feedback = new cvsa::ColorFeedback;
-	tcontrol = new cvsa::TargetControl(CVSA_TARGET_FOLDER);
+	tcontrol = new cvsa::TargetControl(cfggraph.target.folder);
+	*/
 
 	// Initialize targets
-	targetL = tcontrol->Add(CVSA_TARGET_WIDTH, CVSA_TARGET_HEIGHT, tangles.at(0), CVSA_TARGET_DISTANCE);
-	targetR = tcontrol->Add(CVSA_TARGET_WIDTH, CVSA_TARGET_HEIGHT, tangles.at(1), CVSA_TARGET_DISTANCE);
+	//targetL = tcontrol->Add(cfggraph.target.width, cfggraph.target.height, 
+	//						cfggraph.target.angles[0], cfggraph.target.radius[0]);
+	//targetR = tcontrol->Add(cfggraph.target.width, cfggraph.target.height, 
+	//						cfggraph.target.angles[1], cfggraph.target.radius[1]);
 
-	if(targetL == nullptr || targetR == nullptr)
-		exit(1);
+	//if(targetL == nullptr || targetR == nullptr)
+	//	exit(1);
 
-	tcontrol->SetTime(CVSA_TIMING_TARGETMOVE);
+	tcontrol->SetTime(cfgtime.targetmove);
 	tcontrol->Generate(CVSA_TRIAL_NUMBER);
 
 	/*** Graphic setup ***/
+	//engine->Add("feedback", feedback);
+	//engine->Add("fixation", fixation);
+	//engine->Add("cue", cue);
+	//engine->Add("targetL", targetL);
+	//engine->Add("targetR", targetR);
+
 	engine->Open();
-	engine->Add("feedback", feedback);
-	engine->Add("fixation", fixation);
-	engine->Add("cue", cue);
-	engine->Add("targetL", targetL);
-	engine->Add("targetR", targetR);
-
-
 	events->onKeyboard = callback;
 	events->Start();
 
@@ -112,22 +146,22 @@ int main(int argc, char** argv) {
 		tcontrol->Hide();
 		fixation->Hide();
 		cue->Hide();
-		CcTime::Sleep(CVSA_TIMING_ITI);
+		CcTime::Sleep(cfgtime.iti);
 
 		// Fixation 
 		fixation->Show();
 		tcontrol->Show();
-		CcTime::Sleep(CVSA_TIMING_FIXATION);
+		CcTime::Sleep(cfgtime.fixation);
 
 		// Cue
 		cTarget = 0;
 		if(cTrial % 2 == 0) {
 			cTarget = 1;
 		}
-		cue->Rotate(tangles.at(cTarget)+180.0f);
+		cue->Rotate(cfggraph.target.angles[cTarget]+180.0f);
 		cue->Show();
 		fixation->Hide();
-		CcTime::Sleep(CVSA_TIMING_CUE);
+		CcTime::Sleep(cfgtime.cue);
 		
 		// Feedback (To be random)
 		fixation->Show();
@@ -145,14 +179,14 @@ int main(int argc, char** argv) {
 
 		// Boom
 		feedback->SetDiscrete(cvsa::ColorFeedback::AsBoom);
-		CcTime::Sleep(CVSA_TIMING_BOOM);
+		CcTime::Sleep(cfgtime.boom);
 
 		// Random time before target hit
-		CcTime::Sleep(tcontrol->WaitRandom(CVSA_TIMING_TARGETMAX, CVSA_TIMING_TARGETMIN));
+		CcTime::Sleep(tcontrol->WaitRandom(cfgtime.targetmax, cfgtime.targetmin));
 
 		// Target Hit
 		tcontrol->Hit(cTarget, lgreen.data());
-		CcTime::Sleep(CVSA_TIMING_TARGETHIT);
+		CcTime::Sleep(cfgtime.targethit);
 
 		// Target Move
 		while(quit == false) {
@@ -161,7 +195,7 @@ int main(int argc, char** argv) {
 		}
 
 		// Target Stop
-		CcTime::Sleep(CVSA_TIMING_TARGETSTOP);
+		CcTime::Sleep(cfgtime.targetstop);
 
 		// Resetting
 		feedback->Reset();

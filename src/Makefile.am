@@ -20,8 +20,16 @@ libcnbicvsa_la_LDFLAGS = $(AM_CFLAGS) \
 
 
 bin_PROGRAMS = cvsa_offline cvsa_neglect_offline
-cvsa_offline_SOURCES = cvsa_offline.cpp
-cvsa_offline_LDADD = -lcnbicore -ldrawtk -lcnbidraw $(top_builddir)/src/libcnbicvsa.la
+cvsa_offline_SOURCES = cvsa_offline.cpp cvsa_utilities.hpp
+cvsa_offline_LDADD = -lcnbicore 	\
+					 -lcnbiloop 	\
+					 -ltobicore 	\
+					 -ltobiid 		\
+					 -llpttrigger 	\
+					 -lcnbiconfig 	\
+					 -ldrawtk 		\
+					 -lcnbidraw 	\
+					 $(top_builddir)/src/libcnbicvsa.la
 
 cvsa_neglect_offline_SOURCES = cvsa_neglect_offline.cpp
 cvsa_neglect_offline_LDADD = -lcnbicore -ldrawtk -lcnbidraw $(top_builddir)/src/libcnbicvsa.la

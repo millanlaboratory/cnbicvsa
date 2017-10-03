@@ -24,8 +24,22 @@ AC_SUBST(LIBTOOL_DEPS)
 
 save_LIBS="$LIBS"
 
+AC_CHECK_HEADERS([lpttrigger.h], [], 
+				 AC_MSG_ERROR([The lpttrigger headers must be installed.]), [])
+AC_SEARCH_LIBS([OpenLPTTrigger], [lpttrigger], [], 
+			   AC_MSG_ERROR([The lpttrigger library must be installed.]))
+
 AC_SEARCH_LIBS_CLASS([CcFile], [cnbicore], [#include <cnbicore/CcFile.hpp>], ,
 			AC_MSG_ERROR([The cnbicore library cannot be found.]))
+AC_SEARCH_LIBS_CLASS([TCBlock], [tobicore], [#include <tobicore/TCBlock.hpp>], ,
+			AC_MSG_ERROR([The tobicore library cannot be found.]))
+AC_SEARCH_LIBS_CLASS([IDMessage], [tobiid], [#include <tobiid/IDMessage.hpp>], ,
+			AC_MSG_ERROR([The tobiid library cannot be found.]))
+AC_SEARCH_LIBS_CLASS([ClClient], [cnbiloop], [#include <cnbiloop/ClClient.hpp>], ,
+			AC_MSG_ERROR([The cnbiloop library cannot be found.]))
+AC_SEARCH_LIBS_CLASS([CCfgConfig], [cnbiconfig], [#include <cnbiconfig/CCfgConfig.hpp>], ,
+			AC_MSG_ERROR([The cnbiconfig library cannot be found.]))
+
 PKG_CHECK_MODULES(CNBIDRAW, [cnbidraw], [#include <cnbidraw/Shape.hpp>], ,
 			AC_MSG_ERROR([The cnbidraw library cannot be found.]))
 LIBS="$save_LIBS"
