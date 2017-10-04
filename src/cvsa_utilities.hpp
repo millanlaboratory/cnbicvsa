@@ -66,8 +66,9 @@ typedef struct cue_struct {
 typedef struct feedback_struct {
 	float radius;
 	float thick;
-	float color_ring[4];
-	float color_background[4];
+	float color_stroke[4];
+	float color_fill[4];
+	float color_feedback[4];
 	float color_hit[4];
 	float color_miss[4];
 } feedback_t;
@@ -90,8 +91,6 @@ typedef struct graphic_struct {
 } graphic_t;
 
 
-const std::array<float, 4>	white	= {169.0f/256.0f, 169.0f/256.0f, 169.0f/256.0f, 1.0f};
-
 bool cvsa_configure_taskset(CCfgConfig* config, CCfgTaskset** taskset, 
 							const std::string& mname,
 							const std::string& bname, 
@@ -100,6 +99,7 @@ bool xml_configure_timings(CCfgConfig* config, timing_t* timings);
 bool xml_configure_events(CCfgConfig* config, event_t* events);
 bool xml_configure_graphics(CCfgConfig* config, CCfgTaskset* taskset, graphic_t* graphics);
 
+void hex2rgba(const std::string& hex, float* color);
 
 
 bool xml_configure_timings(CCfgConfig* config, timing_t* timings) {
@@ -163,22 +163,24 @@ bool xml_configure_graphics(CCfgConfig* config, CCfgTaskset* taskset, graphic_t*
 		
 		graphics->fixation.size	 = config->BranchEx()->QuickFloatEx("fixation/size");
 		graphics->fixation.thick = config->BranchEx()->QuickFloatEx("fixation/thick");
-		//graphics->fixation.color =
+		hex2rgba(config->BranchEx()->QuickStringEx("fixation/color"), graphics->fixation.color);
 		
 		graphics->cue.width  = config->BranchEx()->QuickFloatEx("cue/width");
 		graphics->cue.height = config->BranchEx()->QuickFloatEx("cue/height");
-		//graphics->cue.color =
+		hex2rgba(config->BranchEx()->QuickStringEx("cue/color"), graphics->cue.color);
 		
 		graphics->feedback.radius = config->BranchEx()->QuickFloatEx("feedback/radius");
 		graphics->feedback.thick  = config->BranchEx()->QuickFloatEx("feedback/thick");
-		//graphics->feedback.color_ring =
-		//graphics->feedback.color_background =
-		//graphics->feedback.color_hit =
-		//graphics->feedback.color_miss =
-	
+		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/stroke"), graphics->feedback.color_stroke);
+		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/fill"), graphics->feedback.color_fill);
+		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/feedback"), graphics->feedback.color_feedback);
+		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/hit"), graphics->feedback.color_hit);
+		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/miss"), graphics->feedback.color_miss);
+
 		graphics->target.width	  = config->BranchEx()->QuickFloatEx("target/width");
 		graphics->target.height   = config->BranchEx()->QuickFloatEx("target/height");
 		graphics->target.folder	  = config->BranchEx()->QuickStringEx("target/folder");
+		hex2rgba(config->BranchEx()->QuickStringEx("target/color"), graphics->target.color);
 		
 
 		// Target angle and radius
@@ -200,6 +202,7 @@ bool xml_configure_graphics(CCfgConfig* config, CCfgTaskset* taskset, graphic_t*
 
 	} catch (XMLException e) {
 		CcLogException(e.Info());
+		printf("%s\n", e.Info().c_str());
 		CcLogFatal("Graphics configuration failed");
 		return false;
 	}
@@ -259,7 +262,7 @@ bool setup_graphic_fixation(cnbi::draw::Cross*& fixation,
 
 	fixation = new cnbi::draw::Cross(graphic->fixation.size,
 									 graphic->fixation.thick,
-									 white.data()); 
+									 graphic->fixation.color); 
 
 	if(engine->Add("fixation", fixation) == false)
 		retcode = false;
@@ -281,7 +284,7 @@ bool setup_graphic_cue(cnbi::draw::Arrow*& cue,
 
 	cue	= new cnbi::draw::Arrow(graphic->cue.width, 
 								graphic->cue.height,
-								white.data());
+								graphic->cue.color);
 	
 	if(engine->Add("cue", cue) == false)
 		retcode = false;
@@ -301,7 +304,13 @@ bool setup_graphic_feedback(cnbi::cvsa::ColorFeedback*& feedback,
 	if(engine == nullptr)
 		retcode = false;
 
-	feedback = new cnbi::cvsa::ColorFeedback;
+	feedback = new cnbi::cvsa::ColorFeedback(graphic->feedback.radius,
+											 graphic->feedback.thick);
+	feedback->SetColorRing(graphic->feedback.color_stroke,
+					  	   graphic->feedback.color_fill,
+					  	   graphic->feedback.color_feedback);
+	feedback->SetColorBoom(graphic->feedback.color_hit, 
+						   graphic->feedback.color_miss);
 	
 	if(engine->Add("feedback", feedback) == false)
 		retcode = false;
@@ -350,6 +359,15 @@ bool setup_graphic_target(cnbi::cvsa::TargetControl*& tcontrol,
 
 }
 
+void hex2rgba(const std::string& hex, float* color) {
+
+	unsigned int r, g, b, a;
+	sscanf(hex.c_str(), "#%02x%02x%02x%02x", &r, &g, &b, &a);
+	color[0] = r/255.0f;
+	color[1] = g/255.0f;
+	color[2] = b/255.0f;
+	color[3] = a/255.0f;
+}
 
 
 	}

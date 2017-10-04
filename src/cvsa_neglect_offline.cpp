@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
 			goto shutdown;
 
 		// Boom
-		feedback->SetDiscrete(cvsa::ColorFeedback::AsBoom);
+		feedback->SetDiscrete(cvsa::ColorFeedback::AsHit);
 		CcTime::Sleep(CVSA_TIMING_BOOM);
 
 		// Random time before target hit

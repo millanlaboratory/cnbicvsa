@@ -10,7 +10,6 @@
 
 
 // Temporary definitions
-#define CVSA_TARGET_DISTANCE	1.0f
 
 #define CVSA_TRIAL_NUMBER		3
 
@@ -22,12 +21,6 @@ void callback(draw::EventKeyboard* evt) {
 		quit = true;
 }
 
-const std::array<float, 4>	white	= {169.0f/256.0f, 169.0f/256.0f, 169.0f/256.0f, 1.0f};
-const std::array<float, 4>	dgreen	= {18.0f/256.0f, 86.0f/256.0f, 0.0f, 1.0f};
-const std::array<float, 4>	lgreen	= {31.0f/256.0f, 140.0f/256.0f, 0.0f, 1.0f};
-const std::array<float, 4>	red		= {140.0f/256.0f, 0.0f, 10.0f/256.0f, 1.0f};
-
-const std::array<float, 2>	tangles = {200.0f, 340.0f};
 
 int main(int argc, char** argv) {
 
@@ -41,12 +34,12 @@ int main(int argc, char** argv) {
 	std::string		xmlfile = "./extra/xml/cvsa_template.xml";
 	std::string		mname = "offline";
 	std::string		bname = "cvsa";
-	std::string		tname = "cvsa_brbl";
+	std::string		tname = "cvsa_btrl";
 	CCfgConfig		config;
+	CCfgTaskset*	taskset = nullptr;
 	cvsa::timing_t	cfgtime;
 	cvsa::event_t	cfgevent;
 	cvsa::graphic_t	cfggraph;
-	CCfgTaskset*	taskset = nullptr;
 
 	unsigned int cTarget;
 	float cValue;
@@ -81,15 +74,7 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	for(auto it=cfggraph.target.angles.begin(); it!=cfggraph.target.angles.end(); ++it) {
-		printf("%u - %f\n", it->first, it->second);
-	}
-	
-	for(auto it=cfggraph.target.radius.begin(); it!=cfggraph.target.radius.end(); ++it) {
-		printf("%u - %f\n", it->first, it->second);
-	}
-
-	/*** Graphic initialization ***/
+	/*** Graphic setup ***/
 	if(cvsa::setup_graphic_engine(engine, &cfggraph) == false)
 		exit(1);
 	if(cvsa::setup_graphic_events(events, engine) == false)
@@ -102,39 +87,9 @@ int main(int argc, char** argv) {
 		exit(1);
 	if(cvsa::setup_graphic_target(tcontrol, &cfggraph, taskset, engine) == false)
 		exit(1);
-	/*
-	engine   = new draw::Engine(cfggraph.window.title, 
-								cfggraph.window.width, 
-								cfggraph.window.height); 
-	events   = new draw::Events(engine);
-	fixation = new draw::Cross(cfggraph.fixation.size, 
-							   cfggraph.fixation.thick, 
-							   white.data());
-	cue		 = new draw::Arrow(cfggraph.cue.width, 
-							   cfggraph.cue.height,
-							   white.data());
-	feedback = new cvsa::ColorFeedback;
-	tcontrol = new cvsa::TargetControl(cfggraph.target.folder);
-	*/
-
-	// Initialize targets
-	//targetL = tcontrol->Add(cfggraph.target.width, cfggraph.target.height, 
-	//						cfggraph.target.angles[0], cfggraph.target.radius[0]);
-	//targetR = tcontrol->Add(cfggraph.target.width, cfggraph.target.height, 
-	//						cfggraph.target.angles[1], cfggraph.target.radius[1]);
-
-	//if(targetL == nullptr || targetR == nullptr)
-	//	exit(1);
 
 	tcontrol->SetTime(cfgtime.targetmove);
 	tcontrol->Generate(CVSA_TRIAL_NUMBER);
-
-	/*** Graphic setup ***/
-	//engine->Add("feedback", feedback);
-	//engine->Add("fixation", fixation);
-	//engine->Add("cue", cue);
-	//engine->Add("targetL", targetL);
-	//engine->Add("targetR", targetR);
 
 	engine->Open();
 	events->onKeyboard = callback;
@@ -178,14 +133,14 @@ int main(int argc, char** argv) {
 			goto shutdown;
 
 		// Boom
-		feedback->SetDiscrete(cvsa::ColorFeedback::AsBoom);
+		feedback->SetDiscrete(cvsa::ColorFeedback::AsHit);
 		CcTime::Sleep(cfgtime.boom);
 
 		// Random time before target hit
 		CcTime::Sleep(tcontrol->WaitRandom(cfgtime.targetmax, cfgtime.targetmin));
 
 		// Target Hit
-		tcontrol->Hit(cTarget, lgreen.data());
+		tcontrol->Hit(cTarget, cfggraph.target.color);
 		CcTime::Sleep(cfgtime.targethit);
 
 		// Target Move

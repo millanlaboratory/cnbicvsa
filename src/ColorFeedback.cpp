@@ -6,28 +6,25 @@
 namespace cnbi {
 	namespace cvsa {
 
-ColorFeedback::ColorFeedback(void) {
+ColorFeedback::ColorFeedback(float radius, float thick) {
+	
+	this->ring_radius_ = radius;
+	this->ring_thick_  = thick;
+	this->ring_strk_ = nullptr;
+	this->ring_fill_ = nullptr;
+	this->ring_fdbk_ = nullptr;
 	
 	/*** Initialize parameters with default values ***/
-	this->ring_radius_ = CNBICVSA_COLORFEEDBACK_RING_RADIUS;
-	this->ring_thick_  = CNBICVSA_COLORFEEDBACK_RING_THICK;
-	this->ring_color_  = {169.0f/256.0f, 169.0f/256.0f, 169.0f/256.0f, 1.0f};
+	this->SetColorRing(default_color_strk, default_color_fill, default_color_fdbk);
+	this->SetColorBoom(default_color_hit, default_color_miss);
 	
-	this->bg_radius_ = CNBICVSA_COLORFEEDBACK_FILL_RADIUS;
-	this->bg_color_  = {57.0f/256.0f, 57.0f/256.0f, 57.0f/256.0f, 1.0f};
-	
-	this->feedback_radius_ = CNBICVSA_COLORFEEDBACK_FEEDBACK_RADIUS;
-	this->feedback_color_  = {18.0f/256.0f, 86.0f/256.0f, 0.0f, 0.0f};
-
 	this->value_		= 0.0f;
 	this->threshold_	= 1.0f;
-	this->boom_color_	= {31.0f/256.0f, 140.0f/256.0f, 0.0f, 0.0f};
-	this->timeout_color_= {140.0f/256.0f, 0.0f, 10.0f/256.0f, 0.0f};
 
 	/*** Create inner shapes ***/
-	this->ring_ = new draw::Ring(this->ring_radius_, this->ring_thick_, this->ring_color_.data(), 500);
-	this->bg_ = new draw::Circle(this->bg_radius_, this->bg_color_.data());
-	this->feedback_ = new draw::Circle(this->feedback_radius_, this->feedback_color_.data());
+	this->ring_strk_ = new draw::Ring(this->ring_radius_, this->ring_thick_, this->ring_color_strk_.data(), 500);
+	this->ring_fill_ = new draw::Circle(this->ring_radius_, this->ring_color_fill_.data());
+	this->ring_fdbk_  = new draw::Circle(this->ring_radius_, this->ring_color_fdbk_.data());
 
 	// Create fill shape
 	this->CreateFill();
@@ -45,9 +42,9 @@ void ColorFeedback::CreateFill(void) {
 	this->WaitShape();
 
 
-	dtk_hshape shps[] = { this->bg_->shp_ptr_, 
-					      this->feedback_->shp_ptr_, 
-						  this->ring_->shp_ptr_};	
+	dtk_hshape shps[] = { this->ring_fill_->shp_ptr_, 
+					      this->ring_fdbk_->shp_ptr_, 
+						  this->ring_strk_->shp_ptr_};	
 
 	this->fill_ptr_ = dtk_create_composite_shape(this->fill_ptr_, 3, shps, 1);
 
@@ -57,6 +54,29 @@ void ColorFeedback::CreateFill(void) {
 }
 
 void ColorFeedback::CreateStroke(void) {
+}
+
+void ColorFeedback::SetColorRing(float* stroke, float* fill, float* feedback) {
+
+	this->WaitShape();
+	std::copy(stroke,   stroke+4,   std::begin(this->ring_color_strk_));
+	std::copy(fill,     fill+4,     std::begin(this->ring_color_fill_));
+	std::copy(feedback, feedback+4, std::begin(this->ring_color_fdbk_));
+	this->PostShape();
+	if(this->ring_strk_ != nullptr)
+		this->ring_strk_->SetColor(this->ring_color_strk_.data());
+	if(this->ring_fill_ != nullptr)
+		this->ring_fill_->SetColor(this->ring_color_fill_.data());
+	if(this->ring_fdbk_ != nullptr)
+		this->ring_fdbk_->SetColor(this->ring_color_fdbk_.data());
+}
+
+void ColorFeedback::SetColorBoom(float* hit, float* miss) {
+
+	this->WaitShape();
+	std::copy(hit,  hit+4,  std::begin(this->ring_color_hit_));
+	std::copy(miss, miss+4, std::begin(this->ring_color_miss_));
+	this->PostShape();
 }
 
 float ColorFeedback::GetValue(void) {
@@ -74,14 +94,14 @@ bool ColorFeedback::Update(float value) {
 	value = value < 1.0f ? value : 1.0f;
 	this->value_ = value;
 	this->PostShape();
-	this->feedback_->SetAlpha(this->value_);
+	this->ring_fdbk_->SetAlpha(this->value_);
 
 	return this->value_ == 1.0f ? true : false;
 }
 
 void ColorFeedback::Reset(void) {
 	this->Update(0.0f);
-	this->ring_->SetColor(this->ring_color_.data());
+	this->ring_strk_->SetColor(this->ring_color_strk_.data());
 }
 
 void ColorFeedback::SetDiscrete(unsigned int mode) {
@@ -89,11 +109,11 @@ void ColorFeedback::SetDiscrete(unsigned int mode) {
 	this->WaitShape();
 
 	switch(mode) {
-		case ColorFeedback::AsBoom:
-			this->ring_->SetColor(this->boom_color_.data());
+		case ColorFeedback::AsHit:
+			this->ring_strk_->SetColor(this->ring_color_hit_.data());
 			break;
-		case ColorFeedback::AsTimeout:
-			this->ring_->SetColor(this->timeout_color_.data());
+		case ColorFeedback::AsMiss:
+			this->ring_strk_->SetColor(this->ring_color_miss_.data());
 			break;
 		default:
 			break;

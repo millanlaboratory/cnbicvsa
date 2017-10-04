@@ -48,6 +48,26 @@
 					<cvsa_bottom_right>1.0</cvsa_bottom_right>
 				</radius>
 			</taskset>
+			<taskset ttype="cvsa_btrl">
+				<trials>
+					<cvsa_bottom_left>15.0</cvsa_bottom_left>
+					<cvsa_bottom_right>15.0</cvsa_bottom_right>
+					<cvsa_top_left>15.0</cvsa_top_left>
+					<cvsa_top_right>15.0</cvsa_top_right>
+				</trials>
+				<angle>
+					<cvsa_bottom_left>200.0</cvsa_bottom_left>
+					<cvsa_bottom_right>340.0</cvsa_bottom_right>
+					<cvsa_top_left>160.0</cvsa_top_left>
+					<cvsa_top_right>20.0</cvsa_top_right>
+				</angle>
+				<radius>
+					<cvsa_bottom_left>1.0</cvsa_bottom_left>
+					<cvsa_bottom_right>1.0</cvsa_bottom_right>
+					<cvsa_top_left>1.0</cvsa_top_left>
+					<cvsa_top_right>1.0</cvsa_top_right>
+				</radius>
+			</taskset>
 		</cvsa>
 	</offline>
 	
@@ -110,6 +130,12 @@
 			<class id="0" key="cvsa_bottom_left"/>
 			<class id="1" key="cvsa_bottom_right"/>
 		</cvsa_brbl> 
+		<cvsa_btrl description="Covert Visual Spatial Attention 4: Bottom Right, Bottom Left, Top Right, Top Left">
+			<class id="0" key="cvsa_bottom_left"/>
+			<class id="1" key="cvsa_bottom_right"/>
+			<class id="2" key="cvsa_top_left"/>
+			<class id="3" key="cvsa_top_right"/>
+		</cvsa_brbl> 
 	</tasksets>
 	
 	<!-- Standard Task List -->
@@ -129,6 +155,16 @@
 			<gdfevent>0x0303</gdfevent>
 			<hwtrigger>1</hwtrigger>
 		</cvsa_center>
+		<cvsa_top_right>
+			<description>CVSA_Top_Right</description>
+			<gdfevent>0x0304</gdfevent>
+			<hwtrigger>1</hwtrigger>
+		</cvsa_top_right>
+		<cvsa_top_left>
+			<description>CVSA_Top_Left</description>
+			<gdfevent>0x0305</gdfevent>
+			<hwtrigger>1</hwtrigger>
+		</cvsa_top_left>
 	</tasks>
 	
 	<!-- Standard Events List -->
@@ -168,28 +204,29 @@
 			<fixation>
 				<size>0.144</size>
 				<thick>0.036</thick>
-				<color>aaa</color>
+				<color>#d8d8d8ff</color>
 			</fixation>
 			<cue>
 				<width>0.18</width>
 				<height>0.18</height>
-				<color>aaa</color>
+				<color>#a9a9a9ff</color>
 			</cue>
 			<feedback>
 				<radius>0.18</radius>
 				<thick>0.03</thick>
 				<color>
-					<ring>aaa</ring>
-					<background>aaa</background>
-					<hit>aaa</hit>
-					<miss>aaa</miss>
+					<stroke>#a9a9a9ff</stroke>
+					<fill>#393939ff</fill>
+					<feedback>#125600ff</feedback>
+					<hit>#1f8c00ff</hit>
+					<miss>#8c000aff</miss>
 				</color>
 			</feedback>
 			<target>
 				<width>0.3</width>
 				<height>0.3</height>
-				<folder>/home/ltonin/.cnbitk/cnbicvsa/icons/</folder>
-				<color>aaa</color>
+				<folder>/home/ltonin/Git/Codes/cnbitk/cnbicvsa/extra/icons/</folder>
+				<color>#1f8c00ff</color>
 			</target>
 		</cnbidraw>
 	</configuration>

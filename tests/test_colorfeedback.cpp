@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 				cfeedback->SetDiscrete(cvsa::ColorFeedback::AsBoom);
 				break;
 			case TimeoutState: 
-				cfeedback->SetDiscrete(cvsa::ColorFeedback::AsTimeout);
+				cfeedback->SetDiscrete(cvsa::ColorFeedback::AsMiss);
 				break;
 			default:
 				break;
