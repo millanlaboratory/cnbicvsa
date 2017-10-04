@@ -5,14 +5,17 @@ lib_LTLIBRARIES = libcnbicvsa.la
 libcnbicvsa_includedir = $(includedir)/cnbicvsa
 libcnbicvsa_include_HEADERS = InfiniteBar.hpp \
 						 	  ColorFeedback.hpp \
-						 	  TargetControl.hpp
+						 	  TargetControl.hpp \
+							  TrialControl.hpp
 
 libcnbicvsa_la_SOURCES = InfiniteBar.hpp \
 						 InfiniteBar.cpp \
 						 ColorFeedback.hpp \
 						 ColorFeedback.cpp \
 						 TargetControl.hpp \
-						 TargetControl.cpp
+						 TargetControl.cpp \
+						 TrialControl.hpp \
+						 TrialControl.cpp
 
 libcnbicvsa_la_LIBADD = -ldrawtk -lcnbicore -lcnbidraw
 libcnbicvsa_la_LDFLAGS = $(AM_CFLAGS) \
