@@ -1,5 +1,5 @@
-#ifndef CNBICVSA_TARGETCONTROL_CPP
-#define CNBICVSA_TARGETCONTROL_CPP
+#ifndef CNBICVSA_TRIALCONTROL_CPP
+#define CNBICVSA_TRIALCONTROL_CPP
 
 #include "TrialControl.hpp"
 
@@ -8,9 +8,9 @@ namespace cnbi {
 
 TrialControl::TrialControl(void){
 	this->nrepetitions_ = 0;
-};
+}
 
-TrialControl::~TrialControl(void){};
+TrialControl::~TrialControl(void){}
 
 bool TrialControl::Add(unsigned int id, unsigned int nrepetitions) {
 	if(this->map_.insert(std::make_pair(id, nrepetitions)).second == false)
@@ -39,7 +39,8 @@ void TrialControl::Generate(void) {
 }
 
 unsigned int TrialControl::GetId(void) {
-	return std::distance(this->sequence_.begin(), this->sequence_it_);
+	//return std::distance(this->sequence_.begin(), this->sequence_it_);
+	return (*this->sequence_it_);
 }
 
 TrialsIt TrialControl::GetIt(void) {
@@ -70,6 +71,25 @@ bool TrialControl::Previous(void) {
 		result = true;
 	}
 	return result;
+}
+
+void TrialControl::Dump(void) {
+	printf("[cvsa::TrialControl] - Number of trials: %u\n", this->nrepetitions_);
+	printf("[cvsa::TrialControl] - Number of classes: %lu\n", map_.size());
+
+	auto i = 0;
+	for(auto it=this->sequence_.begin(); it!=this->sequence_.end(); ++it) {
+		printf("                     |- Trial %u - ClassId %u\n", i, (*it));
+		i++;
+	}
+}
+
+unsigned int TrialControl::GetPosition(void) {
+	return std::distance(this->sequence_.begin(), this->sequence_it_);
+}
+
+unsigned int TrialControl::GetSize(void) {
+	return this->nrepetitions_;
 }
 
 

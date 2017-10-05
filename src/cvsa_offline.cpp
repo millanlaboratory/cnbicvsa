@@ -6,12 +6,8 @@
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
 #include "TargetControl.hpp"
+#include "TrialControl.hpp"
 #include "cvsa_utilities.hpp"
-
-
-// Temporary definitions
-
-#define CVSA_TRIAL_NUMBER		3
 
 using namespace cnbi;
 
@@ -40,8 +36,8 @@ int main(int argc, char** argv) {
 	cvsa::timing_t	cfgtime;
 	cvsa::event_t	cfgevent;
 	cvsa::graphic_t	cfggraph;
+	cvsa::TrialControl	control;
 
-	unsigned int cTarget;
 	float cValue;
 
 	/*** Graphic definitions ***/
@@ -88,15 +84,27 @@ int main(int argc, char** argv) {
 	if(cvsa::setup_graphic_target(tcontrol, &cfggraph, taskset, engine) == false)
 		exit(1);
 
+	/*** Protocol setup ***/
+	if(cvsa::setup_trial_control(&control, taskset) == false)
+		exit(1);
+
+	control.Generate();
+	control.Dump();
 	tcontrol->SetTime(cfgtime.targetmove);
-	tcontrol->Generate(CVSA_TRIAL_NUMBER);
+	tcontrol->Generate(control.GetSize());
 
 	engine->Open();
 	events->onKeyboard = callback;
 	events->Start();
 
-	for(auto cTrial=0; cTrial<CVSA_TRIAL_NUMBER; cTrial++) {
-	
+	for(auto it=control.Begin(); it!=control.End(); ++it) {
+		
+		CcLogInfoS("[cvsa_offline] - Trial "<<control.GetPosition()+1 << "/" << control.GetSize() 
+					<< " [" << taskset->GetTaskEx(control.GetId())->name << "|" 
+					<< taskset->GetTaskEx(control.GetId())->id << "|"
+					<< taskset->GetTaskEx(control.GetId())->gdf << "]");
+		
+
 		// Inter-Trial Interval
 		tcontrol->Hide();
 		fixation->Hide();
@@ -109,11 +117,11 @@ int main(int argc, char** argv) {
 		CcTime::Sleep(cfgtime.fixation);
 
 		// Cue
-		cTarget = 0;
-		if(cTrial % 2 == 0) {
-			cTarget = 1;
-		}
-		cue->Rotate(cfggraph.target.angles[cTarget]+180.0f);
+		//cTarget = 0;
+		//if(cTrial % 2 == 0) {
+		//	cTarget = 1;
+		//}
+		cue->Rotate(cfggraph.target.angles[control.GetId()]+180.0f);
 		cue->Show();
 		fixation->Hide();
 		CcTime::Sleep(cfgtime.cue);
@@ -140,12 +148,12 @@ int main(int argc, char** argv) {
 		CcTime::Sleep(tcontrol->WaitRandom(cfgtime.targetmax, cfgtime.targetmin));
 
 		// Target Hit
-		tcontrol->Hit(cTarget, cfggraph.target.color);
+		tcontrol->Hit(control.GetId(), cfggraph.target.color);
 		CcTime::Sleep(cfgtime.targethit);
 
 		// Target Move
 		while(quit == false) {
-			if(tcontrol->ToCenter(cTarget) == true)
+			if(tcontrol->ToCenter(control.GetId()) == true)
 				break;
 		}
 
@@ -156,6 +164,7 @@ int main(int argc, char** argv) {
 		feedback->Reset();
 		tcontrol->Reset();
 		tcontrol->Next();
+		control.Next();
 
 	}
 

@@ -36,8 +36,8 @@
 		<cvsa description="Offline CVSA" protocol="cvsa_offline">
 			<taskset ttype="cvsa_brbl">
 				<trials>
-					<cvsa_bottom_left>15.0</cvsa_bottom_left>
-					<cvsa_bottom_right>15.0</cvsa_bottom_right>
+					<cvsa_bottom_left>1</cvsa_bottom_left>
+					<cvsa_bottom_right>1</cvsa_bottom_right>
 				</trials>
 				<angle>
 					<cvsa_bottom_left>200.0</cvsa_bottom_left>
@@ -50,10 +50,10 @@
 			</taskset>
 			<taskset ttype="cvsa_btrl">
 				<trials>
-					<cvsa_bottom_left>15.0</cvsa_bottom_left>
-					<cvsa_bottom_right>15.0</cvsa_bottom_right>
-					<cvsa_top_left>15.0</cvsa_top_left>
-					<cvsa_top_right>15.0</cvsa_top_right>
+					<cvsa_bottom_left>1</cvsa_bottom_left>
+					<cvsa_bottom_right>1</cvsa_bottom_right>
+					<cvsa_top_left>1</cvsa_top_left>
+					<cvsa_top_right>1</cvsa_top_right>
 				</trials>
 				<angle>
 					<cvsa_bottom_left>200.0</cvsa_bottom_left>
@@ -76,8 +76,8 @@
 		<cvsa description="Online CVSA" protocol="cvsa_online">
 			<taskset ttype="cvsa_brbl" ctype="cvsa" classifier="kcvsa0">
 				<trials>
-					<cvsa_bottom_left>15.0</cvsa_bottom_left>
-					<cvsa_bottom_right>15.0</cvsa_bottom_right>
+					<cvsa_bottom_left>1</cvsa_bottom_left>
+					<cvsa_bottom_right>1</cvsa_bottom_right>
 				</trials>
 				<threshold>
 					<cvsa_bottom_left>0.7</cvsa_bottom_left>

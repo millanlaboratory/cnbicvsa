@@ -1,5 +1,5 @@
-#ifndef CNBICVSA_TARGETCONTROL_HPP
-#define CNBICVSA_TARGETCONTROL_HPP
+#ifndef CNBICVSA_TRIALCONTROL_HPP
+#define CNBICVSA_TRIALCONTROL_HPP
 
 #include <algorithm>
 #include <random>
@@ -28,6 +28,10 @@ class TrialControl {
 		TrialsIt End(void);
 		bool Next(void);
 		bool Previous(void);
+		void Dump(void);
+
+		unsigned int GetPosition(void);
+		unsigned int GetSize(void);
 
 	private:
 		std::unordered_map<unsigned int, unsigned int>	map_;

@@ -15,6 +15,7 @@
 #include <cnbidraw/Arrow.hpp>
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
+#include "TrialControl.hpp"
 
 namespace cnbi {
 	namespace cvsa {
@@ -356,6 +357,30 @@ bool setup_graphic_target(cnbi::cvsa::TargetControl*& tcontrol,
 		CcLogFatal("Target setup failed");
 
 	return retcode;
+
+}
+
+bool setup_trial_control(cnbi::cvsa::TrialControl* control,
+						 CCfgTaskset* taskset) {
+
+	bool retcode = true;
+	try {	
+	// Trial number
+	for(auto it=taskset->Begin(); it!=taskset->End(); ++it) {
+		// Trial field
+		if(it->second->HasConfig("trials") == false) {
+			CcLogErrorS("Task "<<it->second->name<<" does not define \"trials\"");
+			retcode = false;
+			break;
+		}
+		control->Add(it->second->id, it->second->config["trials"].Int());
+	}
+	} catch(XMLException e) {
+		CcLogException(e.Info());
+	}
+
+	if(retcode == false)
+		printf("Trial setup failed\n");
 
 }
 
