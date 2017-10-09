@@ -21,6 +21,9 @@ ColorFeedback::ColorFeedback(float radius, float thick) {
 	this->value_		= 0.0f;
 	this->threshold_	= 1.0f;
 
+	this->auto_started_ = false;
+
+
 	/*** Create inner shapes ***/
 	this->ring_strk_ = new draw::Ring(this->ring_radius_, this->ring_thick_, this->ring_color_strk_.data(), 500);
 	this->ring_fill_ = new draw::Circle(this->ring_radius_, this->ring_color_fill_.data());
@@ -99,6 +102,48 @@ bool ColorFeedback::Update(float value) {
 	return this->value_ == 1.0f ? true : false;
 }
 
+bool ColorFeedback::AutoUpdate(float mintime, float maxtime) {
+
+	bool result = false;
+	float dt, da;
+
+	// First iteration: set autostarted to true, initialize the timer and
+	// initialize the time
+	if(this->auto_started_ == false) {
+		this->auto_started_ = true;
+		CcTime::Tic(&(this->auto_timer_));
+		
+		std::random_device	rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<> dis(mintime, maxtime);
+		this->auto_trial_duration_ = dis(gen);
+		this->auto_trial_time_ = 0.0f;
+		printf("Trial duration: %f [ms]\n", this->auto_trial_duration_);
+		return false;
+	}
+
+	// Following iterations, compute the elapsed time (dt) from the previous
+	// call and update the time
+	dt = CcTime::Toc(&(this->auto_timer_));
+	CcTime::Tic(&(this->auto_timer_));
+	this->auto_trial_time_ = this->auto_trial_time_ + dt; // for debugging
+
+	da = ((dt/1000.0f))/(this->auto_trial_duration_/1000.0f);
+
+	this->value_ = this->value_ + da;
+	this->value_ = this->value_ > 1.0f ? 1.0f : this->value_;
+	this->ring_fdbk_->SetAlpha(this->value_);
+
+	if(this->value_ >= 1.0f) {
+		this->auto_started_ = false;
+		this->value_ = 0.0f;
+		printf("Elapsed time: %f [ms]\n", this->auto_trial_time_);
+		result = true;
+	}
+
+	return result;
+}
+
 void ColorFeedback::Reset(void) {
 	this->Update(0.0f);
 	this->ring_strk_->SetColor(this->ring_color_strk_.data());
@@ -128,7 +173,6 @@ void ColorFeedback::SetThreshold(float th) {
 	this->threshold_ = th;
 	this->PostShape();
 }
-
 
 
 	}

@@ -2,6 +2,7 @@
 #define CNBICVSA_COLORFEEDBACK_HPP
 
 #include <array>
+#include <random>
 #include <cnbidraw/Shape.hpp>
 #include <cnbidraw/Ring.hpp>
 #include <cnbidraw/Circle.hpp>
@@ -26,6 +27,8 @@ class ColorFeedback : public draw::Shape {
 		void  SetColorBoom(float* hit, float* miss);
 
 		bool  Update(float value);
+		bool  AutoUpdate(float mintime, float maxtime);
+
 		void  Reset(void);
 		void  SetDiscrete(unsigned int mode);
 		float GetValue(void);
@@ -52,8 +55,13 @@ class ColorFeedback : public draw::Shape {
 		std::array<float, 4>	ring_color_fill_;
 		std::array<float, 4>	ring_color_fdbk_;
 
-		float	value_;
-		float	threshold_;
+		float		value_;
+		float		threshold_;
+		
+		bool				auto_started_;
+		float				auto_trial_duration_;
+		float				auto_trial_time_;
+		CcTimeValue			auto_timer_;
 };
 
 	}

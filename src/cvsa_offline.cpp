@@ -1,3 +1,7 @@
+#include <unistd.h>
+#include <cnbiloop/ClLoop.hpp>
+#include <cnbiloop/ClTobiId.hpp>
+
 #include <cnbidraw/Engine.hpp>
 #include <cnbidraw/Events.hpp>
 #include <cnbidraw/EventKeyboard.hpp>
@@ -5,9 +9,11 @@
 #include <cnbidraw/Arrow.hpp>
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
-#include "TargetControl.hpp"
-#include "TrialControl.hpp"
+#include "Target.hpp"
+#include "Copilot.hpp"
 #include "cvsa_utilities.hpp"
+
+#define CVSA_EXECUTABLE_NAME	"cvsa_offline"
 
 using namespace cnbi;
 
@@ -17,39 +23,101 @@ void callback(draw::EventKeyboard* evt) {
 		quit = true;
 }
 
+void usage(void) { 
+	printf("[%s] Usage: %s [OPTION]...\n\n", CVSA_EXECUTABLE_NAME, CVSA_EXECUTABLE_NAME);
+	printf("       -x       xml file: path to the xml file\n");
+	printf("       -m       modality: modality name (e.g., offline, online)\n");
+	printf("       -b       block: block name (e.g., cvsa) \n");
+	printf("       -t       taskset: taskset name (e.g., cvsa_brbl)\n");
+	printf("       -h       display this help and exit\n");
+}
+
 
 int main(int argc, char** argv) {
+	
+	int opt;
+	
+	std::string		xmlfile, mname, bname, tname;
+
+	while((opt = getopt(argc, argv, "x:m:b:t:")) != -1) {
+		if(opt == 'x')
+			xmlfile.assign(optarg);
+		else if(opt == 'm')
+			mname.assign(optarg);
+		else if(opt == 'b')
+			bname.assign(optarg);
+		else if(opt == 't')
+			tname.assign(optarg);
+		else {
+			usage();
+			CcCore::Exit(opt == 'h' ? EXIT_SUCCESS : EXIT_FAILURE);
+		}
+	}
 
 	/*** CNBI Loop initialization ***/
-	CcCore::OpenLogger("cvsa_offline");
+	CcCore::OpenLogger(CVSA_EXECUTABLE_NAME);
 	CcCore::CatchSIGINT();
 	CcCore::CatchSIGTERM();
-
+	ClLoop::Configure();
+	
+	// Tools for TOBI iD
+	ClTobiId id(ClTobiId::SetOnly);
+	IDMessage idm;
+	IDSerializerRapid ids(&idm);
+	idm.SetDescription(CVSA_EXECUTABLE_NAME);
+	idm.SetFamilyType(IDMessage::FamilyBiosig);
+	idm.SetEvent(0);
 
 	/*** Protocol definitions ***/
-	std::string		xmlfile = "./extra/xml/cvsa_template.xml";
-	std::string		mname = "offline";
-	std::string		bname = "cvsa";
-	std::string		tname = "cvsa_btrl";
 	CCfgConfig		config;
 	CCfgTaskset*	taskset = nullptr;
 	cvsa::timing_t	cfgtime;
 	cvsa::event_t	cfgevent;
 	cvsa::graphic_t	cfggraph;
-	cvsa::TrialControl	control;
+	cvsa::Copilot*	copilot = nullptr;
 
 	float cValue;
 
 	/*** Graphic definitions ***/
-	draw::Engine*					engine;
-	draw::Events*					events;
-	draw::Cross*					fixation;
-	draw::Arrow*					cue;
-	cvsa::ColorFeedback*			feedback;
-	draw::Gallery*					targetL;
-	draw::Gallery*					targetR;
-	cvsa::TargetControl*			tcontrol;
+	draw::Engine*			engine = nullptr;
+	draw::Events*			events = nullptr;
+	draw::Cross*			fixation;
+	draw::Arrow*			cue;
+	cvsa::ColorFeedback*	feedback;
+	cvsa::Target*			targets;
 
+	/*** CNBI Loop connection ***/
+	CcLogInfo("Connecting to the CNBI loop...");
+	if(ClLoop::Connect() == false) {
+		CcLogFatal("Cannot connect to the CNBI loop");
+		CcCore::Exit(0);
+	}
+
+	// Retrieve configuration from nameserver (if not already provided)
+	if(xmlfile.empty() == true)
+		xmlfile = ClLoop::nms.RetrieveConfig("cvsa", "xml");
+	if(mname.empty() == true)
+		mname = ClLoop::nms.RetrieveConfig("cvsa", "modality");
+	if(bname.empty() == true)
+		bname = ClLoop::nms.RetrieveConfig("cvsa", "block");
+	if(tname.empty() == true)
+		tname = ClLoop::nms.RetrieveConfig("cvsa", "taskset");
+	CcLogConfigS("Modality="  << mname <<
+				 ", Block="   << bname <<
+				 ", Taskset=" << tname <<
+				 ", Xml="	  << xmlfile);
+
+	if(xmlfile.empty() || mname.empty() || bname.empty() || tname.empty()) {
+		CcLogFatal("Configuration not provided neither via arguments nor via nameserver");
+		CcCore::Exit(0);
+	}
+
+
+	/*** CNBI Loop configuration ***/
+	if(id.Attach("/bus") == false) {
+		CcLogFatal("Cannot attach to TobiId");
+		CcCore::Exit(0);
+	}
 
 	/*** XML setup ***/
 	// Importing the xml file
@@ -58,7 +126,7 @@ int main(int argc, char** argv) {
 		config.ImportFileEx(xmlfile);
 	} catch (XMLException e) {
 		CcLogException(e.Info());
-		exit(1);
+		CcCore::Exit(0);
 	}
 
 	// Configuration
@@ -67,113 +135,136 @@ int main(int argc, char** argv) {
 		(cvsa::xml_configure_events(&config, &cfgevent) == false)		||
 		(cvsa::xml_configure_timings(&config, &cfgtime) == false)) {
 		CcLogFatal("Configuration failed");
-		exit(1);
+		CcCore::Exit(0);
 	}
 
 	/*** Graphic setup ***/
 	if(cvsa::setup_graphic_engine(engine, &cfggraph) == false)
-		exit(1);
+		CcCore::Exit(0);
 	if(cvsa::setup_graphic_events(events, engine) == false)
-		exit(1);
+		CcCore::Exit(0);
 	if(cvsa::setup_graphic_feedback(feedback, &cfggraph, engine) == false)
-		exit(1);
+		CcCore::Exit(0);
 	if(cvsa::setup_graphic_cue(cue, &cfggraph, engine) == false)
-		exit(1);
+		CcCore::Exit(0);
 	if(cvsa::setup_graphic_fixation(fixation, &cfggraph, engine) == false)
-		exit(1);
-	if(cvsa::setup_graphic_target(tcontrol, &cfggraph, taskset, engine) == false)
-		exit(1);
+		CcCore::Exit(0);
+	if(cvsa::setup_graphic_target(targets, &cfggraph, taskset, engine) == false)
+		CcCore::Exit(0);
 
 	/*** Protocol setup ***/
-	if(cvsa::setup_trial_control(&control, taskset) == false)
-		exit(1);
+	if(cvsa::setup_copilot(copilot, taskset) == false)
+		CcCore::Exit(0);
 
-	control.Generate();
-	control.Dump();
-	tcontrol->SetTime(cfgtime.targetmove);
-	tcontrol->Generate(control.GetSize());
+	copilot->Generate();
+	copilot->Dump();
+	targets->SetTime(cfgtime.targetmove);
+	targets->Generate(copilot->GetSize());
 
 	engine->Open();
 	events->onKeyboard = callback;
 	events->Start();
 
-	for(auto it=control.Begin(); it!=control.End(); ++it) {
-		
-		CcLogInfoS("[cvsa_offline] - Trial "<<control.GetPosition()+1 << "/" << control.GetSize() 
-					<< " [" << taskset->GetTaskEx(control.GetId())->name << "|" 
-					<< taskset->GetTaskEx(control.GetId())->id << "|"
-					<< taskset->GetTaskEx(control.GetId())->gdf << "]");
-		
+	std::string  cTaskName;
+	unsigned int cTaskId;
+	unsigned int cTaskEvt;
+
+	for(auto it=copilot->Begin(); it!=copilot->End(); ++it) {
+	
+		cTaskId  = taskset->GetTaskEx(copilot->GetId())->id;
+		cTaskEvt = taskset->GetTaskEx(copilot->GetId())->gdf;
+		cTaskName = taskset->GetTaskEx(copilot->GetId())->name;
+
+		CcLogInfoS("[cvsa_offline] - Trial "<<copilot->GetPosition()+1 << "/" << copilot->GetSize() 
+					<< " [" << cTaskName << "|" << cTaskId << "|" << cTaskEvt << "]");
 
 		// Inter-Trial Interval
-		tcontrol->Hide();
+		targets->Hide();
 		fixation->Hide();
 		cue->Hide();
 		CcTime::Sleep(cfgtime.iti);
 
 		// Fixation 
+		idm.SetEvent(cfgevent.fixation);
+		id.SetMessage(&ids);
 		fixation->Show();
-		tcontrol->Show();
+		targets->Show();
 		CcTime::Sleep(cfgtime.fixation);
+		idm.SetEvent(cfgevent.fixation + cfgevent.off);
+		id.SetMessage(&ids);
 
 		// Cue
-		//cTarget = 0;
-		//if(cTrial % 2 == 0) {
-		//	cTarget = 1;
-		//}
-		cue->Rotate(cfggraph.target.angles[control.GetId()]+180.0f);
+		idm.SetEvent(cTaskEvt);
+		id.SetMessage(&ids);
+		cue->Rotate(cfggraph.target.angles[cTaskId]+180.0f);
 		cue->Show();
 		fixation->Hide();
 		CcTime::Sleep(cfgtime.cue);
+		idm.SetEvent(cTaskEvt + cfgevent.off);
+		id.SetMessage(&ids);
 		
 		// Feedback (To be random)
 		fixation->Show();
 		cue->Hide();
 		cValue = 0.0f;
-		while(quit == false) {
-			cValue = cValue + 0.01f;
-			if(feedback->Update(cValue))
+		idm.SetEvent(cfgevent.feedback);
+		id.SetMessage(&ids);
+		while(quit == false) { 
+			if(feedback->AutoUpdate(cfgtime.feedbackmin, cfgtime.feedbackmax) == true)
 				break;
 			CcTime::Sleep(50.0f);
 		}
+		idm.SetEvent(cfgevent.feedback + cfgevent.off);
+		id.SetMessage(&ids);
 
 		if(quit == true)
 			goto shutdown;
 
 		// Boom
 		feedback->SetDiscrete(cvsa::ColorFeedback::AsHit);
+		idm.SetEvent(cfgevent.hit);
+		id.SetMessage(&ids);
 		CcTime::Sleep(cfgtime.boom);
+		idm.SetEvent(cfgevent.hit + cfgevent.off);
+		id.SetMessage(&ids);
 
 		// Random time before target hit
-		CcTime::Sleep(tcontrol->WaitRandom(cfgtime.targetmax, cfgtime.targetmin));
+		CcTime::Sleep(targets->WaitRandom(cfgtime.targetmax, cfgtime.targetmin));
 
 		// Target Hit
-		tcontrol->Hit(control.GetId(), cfggraph.target.color);
+		targets->Hit(cTaskId, cfggraph.target.color);
+		idm.SetEvent(cfgevent.targethit + cTaskEvt);
+		id.SetMessage(&ids);
 		CcTime::Sleep(cfgtime.targethit);
+		idm.SetEvent(cfgevent.targethit + cTaskEvt + cfgevent.off);
+		id.SetMessage(&ids);
 
 		// Target Move
+		CcTime::Sleep(50.0f);	
+		idm.SetEvent(cfgevent.targetmove + cTaskEvt);
+		id.SetMessage(&ids);
 		while(quit == false) {
-			if(tcontrol->ToCenter(control.GetId()) == true)
+			if(targets->ToCenter(cTaskId) == true)
 				break;
 		}
-
-		// Target Stop
-		CcTime::Sleep(cfgtime.targetstop);
+		idm.SetEvent(cfgevent.targetmove + cTaskEvt + cfgevent.off);
+		id.SetMessage(&ids);
 
 		// Resetting
 		feedback->Reset();
-		tcontrol->Reset();
-		tcontrol->Next();
-		control.Next();
-
+		targets->Reset();
+		targets->Next();
+		copilot->Next();
 	}
 
 shutdown:
+	if(engine != nullptr)
+		delete engine;
+	if(events != nullptr)
+		delete events;
+	if(copilot != nullptr)
+		delete copilot;
 
-	delete engine;
-	delete events;
-	
-
-	return 0;
+	CcCore::Exit(0);
 }
 

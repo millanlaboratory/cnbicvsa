@@ -5,7 +5,7 @@
 #include <cnbidraw/Arrow.hpp>
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
-#include "TargetControl.hpp"
+#include "Target.hpp"
 
 
 // Temporary definitions
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 	cvsa::ColorFeedback*			feedback;
 	draw::Gallery*					targetL;
 	draw::Gallery*					targetR;
-	cvsa::TargetControl*			tcontrol;
+	cvsa::Target*			tcontrol;
 
 
 	/*** Graphic initialization ***/
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 							   CVSA_CUE_HEIGHT,
 							   white.data());
 	feedback = new cvsa::ColorFeedback;
-	tcontrol = new cvsa::TargetControl(CVSA_TARGET_FOLDER);
+	tcontrol = new cvsa::Target(CVSA_TARGET_FOLDER);
 
 	// Initialize targets
 	targetL = tcontrol->Add(CVSA_TARGET_WIDTH, CVSA_TARGET_HEIGHT, tangles.at(0), CVSA_TARGET_DISTANCE);

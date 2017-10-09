@@ -1,5 +1,5 @@
-#ifndef CNBICVSA_TRIALCONTROL_HPP
-#define CNBICVSA_TRIALCONTROL_HPP
+#ifndef CNBICVSA_COPILOT_HPP
+#define CNBICVSA_COPILOT_HPP
 
 #include <algorithm>
 #include <random>
@@ -10,19 +10,21 @@ namespace cnbi {
     namespace cvsa {
 
 typedef std::vector<unsigned int>	Trials;
-typedef Trials::iterator		TrialsIt;
+typedef std::vector<unsigned int>	Catch;
+typedef Trials::iterator			TrialsIt;
 
-class TrialControl {
+class Copilot {
 	
 	public:
-		TrialControl(void);
-		virtual ~TrialControl(void);
+		Copilot(void);
+		virtual ~Copilot(void);
 
 		bool Add(unsigned int id, unsigned int nrepetitions);
 		
-		void Generate(void);
+		void Generate(float ncatch = 0.0);
 		unsigned int GetId(void);
 		TrialsIt GetIt(void);
+		bool IsCatch(void) {};
 
 		TrialsIt Begin(void);
 		TrialsIt End(void);
@@ -35,10 +37,12 @@ class TrialControl {
 
 	private:
 		std::unordered_map<unsigned int, unsigned int>	map_;
-		Trials		sequence_;
+		Trials		sequence_trial_;
+		Catch		sequence_catch_;
 		TrialsIt	sequence_it_;
 
 		unsigned int nrepetitions_;
+		float ncatch_;
 };
 
 	}

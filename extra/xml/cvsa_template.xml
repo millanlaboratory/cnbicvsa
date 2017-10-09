@@ -27,7 +27,6 @@
 		<targetmax>1500.00</targetmax>
 		<targethit>1000.00</targethit>
 		<targetmove>1000.00</targetmove>
-		<targetstop>1000.00</targetstop>
 		<timeout>10000.00</timeout>
 	</timings>
 	
@@ -36,8 +35,8 @@
 		<cvsa description="Offline CVSA" protocol="cvsa_offline">
 			<taskset ttype="cvsa_brbl">
 				<trials>
-					<cvsa_bottom_left>1</cvsa_bottom_left>
-					<cvsa_bottom_right>1</cvsa_bottom_right>
+					<cvsa_bottom_left>30</cvsa_bottom_left>
+					<cvsa_bottom_right>30</cvsa_bottom_right>
 				</trials>
 				<angle>
 					<cvsa_bottom_left>200.0</cvsa_bottom_left>
@@ -177,9 +176,8 @@
 			<dfeedback>0x030e</dfeedback>
 			<hit>0x0381</hit>
 			<miss>0x0382</miss>
-			<targethit>0x0391</targethit>
-			<targetmove>0x0392</targetmove>
-			<targetstop>0x0393</targetstop>
+			<targethit>0x0100</targethit>
+			<targetmove>0x0200</targetmove>
 			<timeout>0x0383</timeout>
 		</gdfevents>
 	</events>

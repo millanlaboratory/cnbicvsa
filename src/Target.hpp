@@ -1,5 +1,5 @@
-#ifndef CNBICVSA_TARGETCONTROL_HPP
-#define CNBICVSA_TARGETCONTROL_HPP
+#ifndef CNBICVSA_TARGET_HPP
+#define CNBICVSA_TARGET_HPP
 
 #include <algorithm>
 #include <array>
@@ -21,11 +21,11 @@ typedef std::vector<std::shared_ptr<draw::Gallery>>::iterator ListIt;
 
 typedef std::array<float, 2> Position;
 
-class TargetControl {
+class Target {
 
 	public:
-		TargetControl(const std::string& folder, const std::vector<std::string> ext = {".png"});
-		virtual ~TargetControl(void);
+		Target(const std::string& folder, const std::vector<std::string> ext = {".png"});
+		virtual ~Target(void);
 
 
 		draw::Gallery* Add(float width, float height, float angle, float radius); 	

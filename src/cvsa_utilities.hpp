@@ -15,7 +15,7 @@
 #include <cnbidraw/Arrow.hpp>
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
-#include "TrialControl.hpp"
+#include "Copilot.hpp"
 
 namespace cnbi {
 	namespace cvsa {
@@ -31,7 +31,6 @@ typedef struct timing_struct {
 	float targetmax;
 	float targethit;
 	float targetmove;
-	float targetstop;
 	float timeout;
 } timing_t;
 
@@ -43,7 +42,6 @@ typedef struct event_struct {
 	unsigned int miss;
 	unsigned int targethit;
 	unsigned int targetmove;
-	unsigned int targetstop;
 } event_t;
 
 typedef struct window_struct {
@@ -117,7 +115,6 @@ bool xml_configure_timings(CCfgConfig* config, timing_t* timings) {
 		timings->targetmax	  = config->BranchEx()->QuickFloatEx("targetmax");
 		timings->targethit	  = config->BranchEx()->QuickFloatEx("targethit");
 		timings->targetmove	  = config->BranchEx()->QuickFloatEx("targetmove");
-		timings->targetstop	  = config->BranchEx()->QuickFloatEx("targetstop");
 		timings->timeout	  = config->BranchEx()->QuickFloatEx("timeout");
 		CcLogConfig("Timings configuration succeed");
 
@@ -142,7 +139,6 @@ bool xml_configure_events(CCfgConfig* config, event_t* events) {
 		events->miss	   = config->BranchEx()->QuickGDFIntEx("miss");
 		events->targethit  = config->BranchEx()->QuickGDFIntEx("targethit");
 		events->targetmove = config->BranchEx()->QuickGDFIntEx("targetmove");
-		events->targetstop = config->BranchEx()->QuickGDFIntEx("targetstop");
 		CcLogConfig("Events configuration succeed");
 
 	} catch (XMLException e) {
@@ -267,6 +263,8 @@ bool setup_graphic_fixation(cnbi::draw::Cross*& fixation,
 
 	if(engine->Add("fixation", fixation) == false)
 		retcode = false;
+	else
+		fixation->Hide();
 	
 	if(retcode == false)	
 		CcLogFatal("Fixation setup failed");
@@ -287,8 +285,10 @@ bool setup_graphic_cue(cnbi::draw::Arrow*& cue,
 								graphic->cue.height,
 								graphic->cue.color);
 	
-	if(engine->Add("cue", cue) == false)
+	if(engine->Add("cue", cue) == false) 
 		retcode = false;
+	else
+		cue->Hide();
 
 	if(retcode == false)	
 		CcLogFatal("Cue setup failed");
@@ -322,7 +322,7 @@ bool setup_graphic_feedback(cnbi::cvsa::ColorFeedback*& feedback,
 	return retcode;
 }
 
-bool setup_graphic_target(cnbi::cvsa::TargetControl*& tcontrol, 
+bool setup_graphic_target(cnbi::cvsa::Target*& tcontrol, 
 						  graphic_t* graphic,
 						  CCfgTaskset* taskset,
 						  cnbi::draw::Engine* engine) {
@@ -333,7 +333,7 @@ bool setup_graphic_target(cnbi::cvsa::TargetControl*& tcontrol,
 	if(engine == nullptr)
 		retcode = false;
 
-	tcontrol = new cnbi::cvsa::TargetControl(graphic->target.folder);
+	tcontrol = new cnbi::cvsa::Target(graphic->target.folder);
 
 	
 	for(auto it=taskset->Begin(); it!=taskset->End(); ++it) {
@@ -344,11 +344,13 @@ bool setup_graphic_target(cnbi::cvsa::TargetControl*& tcontrol,
 		if(ctarget == nullptr) {
 			retcode = false;
 			break;
-		}
+		} 
 		
 		if(engine->Add("target"+std::to_string(it->second->id), ctarget) == false) {
 			retcode = false;
 			break;
+		} else {
+			ctarget->Hide();
 		}
 
 	}
@@ -356,25 +358,29 @@ bool setup_graphic_target(cnbi::cvsa::TargetControl*& tcontrol,
 	if(retcode == false)
 		CcLogFatal("Target setup failed");
 
+
 	return retcode;
 
 }
 
-bool setup_trial_control(cnbi::cvsa::TrialControl* control,
+bool setup_copilot(cnbi::cvsa::Copilot*& copilot,
 						 CCfgTaskset* taskset) {
 
 	bool retcode = true;
+
+	copilot = new cnbi::cvsa::Copilot;
+
 	try {	
-	// Trial number
-	for(auto it=taskset->Begin(); it!=taskset->End(); ++it) {
-		// Trial field
-		if(it->second->HasConfig("trials") == false) {
-			CcLogErrorS("Task "<<it->second->name<<" does not define \"trials\"");
-			retcode = false;
-			break;
+		// Trial number
+		for(auto it=taskset->Begin(); it!=taskset->End(); ++it) {
+			// Trial field
+			if(it->second->HasConfig("trials") == false) {
+				CcLogErrorS("Task "<<it->second->name<<" does not define \"trials\"");
+				retcode = false;
+				break;
+			}
+			retcode = retcode & copilot->Add(it->second->id, it->second->config["trials"].Int());
 		}
-		control->Add(it->second->id, it->second->config["trials"].Int());
-	}
 	} catch(XMLException e) {
 		CcLogException(e.Info());
 	}
@@ -382,6 +388,7 @@ bool setup_trial_control(cnbi::cvsa::TrialControl* control,
 	if(retcode == false)
 		printf("Trial setup failed\n");
 
+	return retcode;
 }
 
 void hex2rgba(const std::string& hex, float* color) {
