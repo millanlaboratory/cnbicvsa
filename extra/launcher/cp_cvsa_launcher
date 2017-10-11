@@ -1,0 +1,94 @@
+#!/bin/bash
+
+NAME="cp_cvsa_launcher"
+DEFAULT_CVSA_BLOCK="cvsa"
+DEFAULT_CVSA_TASKSET="cvsa_brbl"
+DEFAULT_CVSA_MODALITY="offline"
+
+usage(){
+	printf "\n[$NAME] - Usage: $NAME -x XMLPATH [OPTION]...\n\n"
+	printf "	-x 		path of the xml file\n"
+	printf "	-b 		experiment block 	[Default: 'cvsa']\n"
+	printf "	-t 		experiment taskset 	[Default: 'cvsa_brbl']\n"
+	printf "	-m 		experiment modality [Default: 'offline']\n"
+}
+
+block=$DEFAULT_CVSA_BLOCK
+taskset=$DEFAULT_CVSA_TASKSET
+modality=$DEFAULT_CVSA_MODALITY
+
+xflag=false
+
+# Getting optional arguments
+while getopts ":t:b:x:m:" opt; do
+	case $opt in
+		t)
+			taskset=$OPTARG
+			;;
+		b)
+			block=$OPTARG
+			;;
+		x)
+			xml=$OPTARG
+			xflag=true;
+			;;
+		m)
+			modality=$OPTARG
+			;;
+		\?)
+			echo "[$NAME] - Invalid option: -$OPTARG" >&2
+			usage;
+			exit 1
+			;;
+		:)
+			echo "[$NAME] - Option -$OPTARG requires an argument.">&2
+			usage;
+			exit 1
+			;;
+	esac
+done
+
+if ! $xflag 
+then
+	echo "[$NAME] - XML filepath must be provided (-x XMLPATH)" >&2
+	usage;
+    exit 1
+fi
+
+executable=$(ccfg_cli -x $xml -M $modality -B $block -p)
+
+if [ "$executable" == "" ]; then
+	echo "[$NAME] - Cannot retrieve executable name" >&2
+	exit 1
+fi
+
+subject=$(ccfg_getstring -x $xml -r cnbiconfig -p subject/id)
+if [ "$subject" == "" ]; then
+	echo "[$NAME] - Cannot retrieve subject if" >&2
+	exit 1
+fi
+
+echo "[$NAME] - Xml:        $xml"
+echo "[$NAME] - Subject:    $subject"
+echo "[$NAME] - Block:      $block"
+echo "[$NAME] - Taskset:    $taskset"
+echo "[$NAME] - Modality:   $modality"
+echo "[$NAME] - Executable: $executable"
+
+# Upload all parameters to nameserver 
+echo "[$NAME] - Uploading XML parameters to nameserver"
+if [ "$modality" == "offline" ]; then
+	cl_init -x $xml -lF -B $block -T $taskset
+elif ["$modality" == "online" ]; then
+	cl_init -x $xml -lN -B $block -T $taskset
+else
+	echo "[$NAME] - Unknown modality" >&2
+	exit 1
+fi
+
+
+
+# Unload configuration from nameserver
+cl_init -u -B $block
+
+
