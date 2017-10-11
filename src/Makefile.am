@@ -1,4 +1,4 @@
-AM_CXXFLAGS = -std=c++11 -I$(top_srcdir)/src
+AM_CXXFLAGS = -std=c++11 -I$(top_srcdir)/src -O0 -fbuiltin -g
 
 lib_LTLIBRARIES = libcnbicvsa.la
 

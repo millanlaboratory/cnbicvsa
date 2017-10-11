@@ -61,22 +61,7 @@ void Target::Generate(unsigned int nrepetitions) {
 
 	/*** Store the sequence in the internal object sequence ***/
 	this->sequence_ = seq;
-
 	this->sequence_it_ = this->Begin();
-
-	printf("nrepetions: %u\n", nrepetitions);
-	printf("nobjects: %u\n", this->nobjects_);
-	printf("ntargets: %u\n", this->ntargets_);
-	auto i=0;
-	for(auto its=this->sequence_.begin(); its!=this->sequence_.end(); ++its) {
-		printf("[%d]", i);
-		for(auto ite=(*its).begin(); ite!=(*its).end(); ++ite) {
-			printf(" %u", (*ite));	
-		}
-		printf("\n");
-		i++;
-	}
-
 }
 
 void Target::SetTime(float time) {
@@ -168,6 +153,7 @@ bool Target::ToCenter(unsigned int id) {
 
 	// Check if the current radius is close to the center
 	if(std::fabs(cradius) <= 0.01f) {
+		this->list_.at(id)->Move(0.0f, 0.0f);
 		this->ismoving_ = false;
 		result = true;
 	}
@@ -201,10 +187,6 @@ bool Target::Previous(void) {
 	}
 	return result;
 }
-
-//unsigned int Target::At(unsigned int pos) {
-//	return (*this->sequence_it_).at(pos);
-//}
 
 Sequence Target::replicate(Sequence src, unsigned int n) {
 	
@@ -242,6 +224,34 @@ Position Target::tocartesian(float angle, float radius) {
 	position.at(1) = radius*sin(angle*M_PI/180.0f);
 
 	return position;
+}
+
+bool Target::Export(const std::string& filename) {
+
+	std::ofstream output;
+
+	output.open(filename);
+	if(output.is_open()) {
+
+		output<<"Trial\tTargetId\tTargetFolder"<<std::endl;
+
+		auto i=0;
+		for(auto its=this->sequence_.begin(); its!=this->sequence_.end(); ++its) {
+			output<<std::setfill('0')<<std::setw(3)<<i<<"\t\t";
+			for(auto ite=(*its).begin(); ite!=(*its).end(); ++ite) {
+				output<<std::right<<std::setfill(' ')<<std::setw(3)<<(*ite)<<" ";
+			}
+			output<<"\t\t"<<this->folder_;
+			output<<std::endl;
+			i++;
+		}
+		output.close();
+		return true;
+	} else {
+		return false;
+	}
+
+
 }
 
 	}

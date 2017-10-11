@@ -5,6 +5,7 @@
 #include <random>
 #include <unordered_map>
 #include <vector>
+#include <cmath>
 
 namespace cnbi {
     namespace cvsa {
@@ -12,6 +13,7 @@ namespace cnbi {
 typedef std::vector<unsigned int>	Trials;
 typedef std::vector<unsigned int>	Catch;
 typedef Trials::iterator			TrialsIt;
+typedef Catch::iterator				CatchIt;
 
 class Copilot {
 	
@@ -19,12 +21,13 @@ class Copilot {
 		Copilot(void);
 		virtual ~Copilot(void);
 
-		bool Add(unsigned int id, unsigned int nrepetitions);
+		bool Add(unsigned int id, unsigned int ntrials, float ncatch = 0.0f);
 		
-		void Generate(float ncatch = 0.0);
+		void Generate(void);
 		unsigned int GetId(void);
 		TrialsIt GetIt(void);
-		bool IsCatch(void) {};
+		bool IsCatch(void);
+		unsigned int GetCatchId(void);
 
 		TrialsIt Begin(void);
 		TrialsIt End(void);
@@ -36,13 +39,15 @@ class Copilot {
 		unsigned int GetSize(void);
 
 	private:
-		std::unordered_map<unsigned int, unsigned int>	map_;
+		std::unordered_map<unsigned int, unsigned int>	map_trial_;
+		std::unordered_map<unsigned int, float>  map_catch_;
+
 		Trials		sequence_trial_;
 		Catch		sequence_catch_;
-		TrialsIt	sequence_it_;
+		TrialsIt	sequence_trial_it_;
+		CatchIt		sequence_catch_it_;
 
-		unsigned int nrepetitions_;
-		float ncatch_;
+		unsigned int ntrials_;
 };
 
 	}

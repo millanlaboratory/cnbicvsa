@@ -13,6 +13,8 @@
 #include <cnbidraw/EventKeyboard.hpp>
 #include <cnbidraw/Cross.hpp>
 #include <cnbidraw/Arrow.hpp>
+#include <cnbidraw/String.hpp>
+#include <cnbidraw/Font.hpp>
 #include <cnbidraw/Gallery.hpp>
 #include "ColorFeedback.hpp"
 #include "Copilot.hpp"
@@ -31,6 +33,7 @@ typedef struct timing_struct {
 	float targetmax;
 	float targethit;
 	float targetmove;
+	float targetstop;
 	float timeout;
 } timing_t;
 
@@ -42,6 +45,7 @@ typedef struct event_struct {
 	unsigned int miss;
 	unsigned int targethit;
 	unsigned int targetmove;
+	unsigned int targetstop;
 } event_t;
 
 typedef struct window_struct {
@@ -72,6 +76,12 @@ typedef struct feedback_struct {
 	float color_miss[4];
 } feedback_t;
 
+typedef struct trialtext_struct {
+	float				size;
+	float				color[4];
+	cnbi::draw::Font*	font;
+} trialtext_t;
+
 typedef struct target_struct {
 	float				width;
 	float				height;
@@ -79,6 +89,7 @@ typedef struct target_struct {
 	std::unordered_map<unsigned int, float>	angles;
 	std::unordered_map<unsigned int, float>	radius;
 	float color[4];
+	std::string			logdir;
 } target_t;
 
 typedef struct graphic_struct {
@@ -86,6 +97,7 @@ typedef struct graphic_struct {
 	fixation_t	fixation;
 	cue_t		cue;
 	feedback_t	feedback;
+	trialtext_t trialtext;
 	target_t	target;
 } graphic_t;
 
@@ -99,6 +111,7 @@ bool xml_configure_events(CCfgConfig* config, event_t* events);
 bool xml_configure_graphics(CCfgConfig* config, CCfgTaskset* taskset, graphic_t* graphics);
 
 void hex2rgba(const std::string& hex, float* color);
+void ExpandPath(std::string& text);
 
 
 bool xml_configure_timings(CCfgConfig* config, timing_t* timings) {
@@ -115,6 +128,7 @@ bool xml_configure_timings(CCfgConfig* config, timing_t* timings) {
 		timings->targetmax	  = config->BranchEx()->QuickFloatEx("targetmax");
 		timings->targethit	  = config->BranchEx()->QuickFloatEx("targethit");
 		timings->targetmove	  = config->BranchEx()->QuickFloatEx("targetmove");
+		timings->targetstop	  = config->BranchEx()->QuickFloatEx("targetstop");
 		timings->timeout	  = config->BranchEx()->QuickFloatEx("timeout");
 		CcLogConfig("Timings configuration succeed");
 
@@ -139,6 +153,7 @@ bool xml_configure_events(CCfgConfig* config, event_t* events) {
 		events->miss	   = config->BranchEx()->QuickGDFIntEx("miss");
 		events->targethit  = config->BranchEx()->QuickGDFIntEx("targethit");
 		events->targetmove = config->BranchEx()->QuickGDFIntEx("targetmove");
+		events->targetstop = config->BranchEx()->QuickGDFIntEx("targetstop");
 		CcLogConfig("Events configuration succeed");
 
 	} catch (XMLException e) {
@@ -174,10 +189,17 @@ bool xml_configure_graphics(CCfgConfig* config, CCfgTaskset* taskset, graphic_t*
 		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/hit"), graphics->feedback.color_hit);
 		hex2rgba(config->BranchEx()->QuickStringEx("feedback/color/miss"), graphics->feedback.color_miss);
 
+		graphics->trialtext.size = config->BranchEx()->QuickFloatEx("trialtext/size");;
+		hex2rgba(config->BranchEx()->QuickStringEx("trialtext/color"), graphics->trialtext.color);
+		graphics->trialtext.font = new cnbi::draw::Font(config->BranchEx()->QuickStringEx("trialtext/font"));
+
 		graphics->target.width	  = config->BranchEx()->QuickFloatEx("target/width");
 		graphics->target.height   = config->BranchEx()->QuickFloatEx("target/height");
 		graphics->target.folder	  = config->BranchEx()->QuickStringEx("target/folder");
+		ExpandPath(graphics->target.folder);
 		hex2rgba(config->BranchEx()->QuickStringEx("target/color"), graphics->target.color);
+		graphics->target.logdir	  = config->BranchEx()->QuickStringEx("target/logdir");
+		ExpandPath(graphics->target.logdir);
 		
 
 		// Target angle and radius
@@ -315,9 +337,32 @@ bool setup_graphic_feedback(cnbi::cvsa::ColorFeedback*& feedback,
 	
 	if(engine->Add("feedback", feedback) == false)
 		retcode = false;
+	else
+		feedback->Hide();
 	
 	if(retcode == false)
 		CcLogFatal("Feedback setup failed");
+
+	return retcode;
+}
+
+bool setup_graphic_trialtext(cnbi::draw::String*& text, 
+							 graphic_t* graphic, 
+							 cnbi::draw::Engine* engine) {
+
+	bool retcode = true;
+
+	if(engine == nullptr)
+		retcode = false;
+
+	text = new cnbi::draw::String(graphic->trialtext.size, graphic->trialtext.color);
+	text->SetFont(graphic->trialtext.font);
+	
+	if(engine->Add("trialtext", text) == false)
+		retcode = false;
+	
+	if(retcode == false)
+		CcLogFatal("TrialText setup failed");
 
 	return retcode;
 }
@@ -367,6 +412,8 @@ bool setup_copilot(cnbi::cvsa::Copilot*& copilot,
 						 CCfgTaskset* taskset) {
 
 	bool retcode = true;
+	int ctrials;
+	float ccatch;
 
 	copilot = new cnbi::cvsa::Copilot;
 
@@ -378,8 +425,21 @@ bool setup_copilot(cnbi::cvsa::Copilot*& copilot,
 				CcLogErrorS("Task "<<it->second->name<<" does not define \"trials\"");
 				retcode = false;
 				break;
+			} else {
+				ctrials = it->second->config["trials"].Int();
 			}
-			retcode = retcode & copilot->Add(it->second->id, it->second->config["trials"].Int());
+			CcLogInfoS("Number of trials for " << it->second->name<<": "<<ctrials);
+
+			// Catch field
+			if(it->second->HasConfig("catch") == false) {
+				CcLogWarningS("Task "<<it->second->name<<" does not define \"catch\"");
+				ccatch = 0.0f;
+			} else {
+				ccatch = it->second->config["catch"].Float();
+			}
+			CcLogInfoS("Percentage of catch trials for " << it->second->name<<": "<<ccatch<<"%");
+
+			retcode = retcode & copilot->Add(it->second->id, ctrials, ccatch);
 		}
 	} catch(XMLException e) {
 		CcLogException(e.Info());
@@ -399,6 +459,17 @@ void hex2rgba(const std::string& hex, float* color) {
 	color[1] = g/255.0f;
 	color[2] = b/255.0f;
 	color[3] = a/255.0f;
+}
+
+void ExpandPath(std::string& text) {
+	static std::regex env("/?\\$\\{?([^}/]+)\\}?/?");
+	std::smatch match;
+	while(std::regex_search(text, match, env)) {
+		const char* s = getenv(match[1].str().c_str());
+		const std::string var(s==NULL ? "" : s);
+		text.replace(match[0].first, match[0].second, var+"/");
+	}
+	
 }
 
 

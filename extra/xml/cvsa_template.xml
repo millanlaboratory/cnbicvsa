@@ -27,6 +27,7 @@
 		<targetmax>1500.00</targetmax>
 		<targethit>1000.00</targethit>
 		<targetmove>1000.00</targetmove>
+		<targetstop>200.00</targetstop>
 		<timeout>10000.00</timeout>
 	</timings>
 	
@@ -35,9 +36,13 @@
 		<cvsa description="Offline CVSA" protocol="cvsa_offline">
 			<taskset ttype="cvsa_brbl">
 				<trials>
-					<cvsa_bottom_left>30</cvsa_bottom_left>
-					<cvsa_bottom_right>30</cvsa_bottom_right>
+					<cvsa_bottom_left>15</cvsa_bottom_left>
+					<cvsa_bottom_right>15</cvsa_bottom_right>
 				</trials>
+				<catch description="Percentage of catch trials for each class">
+					<cvsa_bottom_left>20.0</cvsa_bottom_left>
+					<cvsa_bottom_right>20.0</cvsa_bottom_right>
+				</catch>
 				<angle>
 					<cvsa_bottom_left>200.0</cvsa_bottom_left>
 					<cvsa_bottom_right>340.0</cvsa_bottom_right>
@@ -178,6 +183,7 @@
 			<miss>0x0382</miss>
 			<targethit>0x0100</targethit>
 			<targetmove>0x0200</targetmove>
+			<targetstop>0x0300</targetstop>
 			<timeout>0x0383</timeout>
 		</gdfevents>
 	</events>
@@ -220,11 +226,17 @@
 					<miss>#8c000aff</miss>
 				</color>
 			</feedback>
+			<trialtext>
+				<size>0.06</size>
+				<color>#d8d8d8ff</color>
+				<font>arial:style=bold</font>
+			</trialtext>
 			<target>
 				<width>0.3</width>
 				<height>0.3</height>
-				<folder>/home/ltonin/Git/Codes/cnbitk/cnbicvsa/extra/icons/</folder>
+				<folder>$HOME/Git/Codes/cnbitk/cnbicvsa/extra/icons/</folder>
 				<color>#1f8c00ff</color>
+				<logdir>$PWD</logdir>
 			</target>
 		</cnbidraw>
 	</configuration>

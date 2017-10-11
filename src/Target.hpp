@@ -7,6 +7,10 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <ctime>
+#include <locale>
+#include <fstream>
+#include <iomanip>
 #include <cnbidraw/Gallery.hpp>
 
 namespace cnbi {
@@ -39,6 +43,8 @@ class Target {
 		bool ToCenter(unsigned int id);	
 		void Reset(void);
 		float WaitRandom(float maxtime, float mintime = 0.0f);
+
+		bool Export(const std::string& dirname = "./");
 
 		bool Next(void);
 		bool Previous(void);

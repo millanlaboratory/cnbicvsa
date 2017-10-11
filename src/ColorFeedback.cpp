@@ -44,19 +44,27 @@ void ColorFeedback::CreateFill(void) {
 
 	this->WaitShape();
 
-
+	this->ring_strk_->WaitShape();
+	this->ring_fill_->WaitShape();
+	this->ring_fdbk_->WaitShape();
 	dtk_hshape shps[] = { this->ring_fill_->shp_ptr_, 
 					      this->ring_fdbk_->shp_ptr_, 
 						  this->ring_strk_->shp_ptr_};	
 
 	this->fill_ptr_ = dtk_create_composite_shape(this->fill_ptr_, 3, shps, 1);
 
+	this->ring_strk_->PostShape();
+	this->ring_fill_->PostShape();
+	this->ring_fdbk_->PostShape();
 
 	this->PostShape();
 
 }
 
 void ColorFeedback::CreateStroke(void) {
+	this->WaitShape();
+	this->strk_ptr_ = nullptr;
+	this->PostShape();
 }
 
 void ColorFeedback::SetColorRing(float* stroke, float* fill, float* feedback) {
@@ -118,7 +126,7 @@ bool ColorFeedback::AutoUpdate(float mintime, float maxtime) {
 		std::uniform_real_distribution<> dis(mintime, maxtime);
 		this->auto_trial_duration_ = dis(gen);
 		this->auto_trial_time_ = 0.0f;
-		printf("Trial duration: %f [ms]\n", this->auto_trial_duration_);
+		//printf("Trial duration: %f [ms]\n", this->auto_trial_duration_);
 		return false;
 	}
 
@@ -131,13 +139,14 @@ bool ColorFeedback::AutoUpdate(float mintime, float maxtime) {
 	da = ((dt/1000.0f))/(this->auto_trial_duration_/1000.0f);
 
 	this->value_ = this->value_ + da;
-	this->value_ = this->value_ > 1.0f ? 1.0f : this->value_;
+	//this->value_ = this->value_ > 1.0f ? 1.0f : this->value_;
+	//printf("dt=%f, da=%f, alpha=%f\n", dt, da, this->value_);
 	this->ring_fdbk_->SetAlpha(this->value_);
 
 	if(this->value_ >= 1.0f) {
 		this->auto_started_ = false;
 		this->value_ = 0.0f;
-		printf("Elapsed time: %f [ms]\n", this->auto_trial_time_);
+		//printf("Elapsed time: %f [ms]\n", this->auto_trial_time_);
 		result = true;
 	}
 
