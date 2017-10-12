@@ -221,7 +221,7 @@
 				<color>
 					<stroke>#a9a9a9ff</stroke>
 					<fill>#393939ff</fill>
-					<feedback>#125600ff</feedback>
+					<feedback>#2cd300ff</feedback>
 					<hit>#1f8c00ff</hit>
 					<miss>#8c000aff</miss>
 				</color>
@@ -234,9 +234,8 @@
 			<target>
 				<width>0.3</width>
 				<height>0.3</height>
-				<folder>$HOME/Git/Codes/cnbitk/cnbicvsa/extra/icons/</folder>
+				<folder>$HOME/.cnbitk/cnbicvsa/icons/</folder>
 				<color>#1f8c00ff</color>
-				<logdir>$PWD</logdir>
 			</target>
 		</cnbidraw>
 	</configuration>

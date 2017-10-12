@@ -89,7 +89,6 @@ typedef struct target_struct {
 	std::unordered_map<unsigned int, float>	angles;
 	std::unordered_map<unsigned int, float>	radius;
 	float color[4];
-	std::string			logdir;
 } target_t;
 
 typedef struct graphic_struct {
@@ -198,9 +197,6 @@ bool xml_configure_graphics(CCfgConfig* config, CCfgTaskset* taskset, graphic_t*
 		graphics->target.folder	  = config->BranchEx()->QuickStringEx("target/folder");
 		ExpandPath(graphics->target.folder);
 		hex2rgba(config->BranchEx()->QuickStringEx("target/color"), graphics->target.color);
-		graphics->target.logdir	  = config->BranchEx()->QuickStringEx("target/logdir");
-		ExpandPath(graphics->target.logdir);
-		
 
 		// Target angle and radius
 		for(auto it=taskset->Begin(); it!=taskset->End(); ++it) {

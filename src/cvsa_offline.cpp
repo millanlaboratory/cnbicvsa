@@ -43,12 +43,11 @@ int main(int argc, char** argv) {
 	
 	int opt;
 	
-	std::string	xmlfile = "extra/xml/cvsa_template.xml";
-	std::string mname = "offline";
-	std::string bname = "cvsa";
-	std::string tname = "cvsa_brbl";
-	std::string lname =  std::string(CVSA_EXECUTABLE_NAME) + "_target.log"; 
-	std::string logfile;
+	std::string	xmlfile;
+	std::string mname;
+	std::string bname;
+	std::string tname;
+	std::string lname;  
 
 	while((opt = getopt(argc, argv, "x:m:b:t:l:")) != -1) {
 		if(opt == 'x')
@@ -122,7 +121,8 @@ int main(int argc, char** argv) {
 	CcLogConfigS("Modality="  << mname <<
 				 ", Block="   << bname <<
 				 ", Taskset=" << tname <<
-				 ", Xml="	  << xmlfile);
+				 ", Xml="	  << xmlfile <<
+				 ", Logname=" << lname);
 
 	if(xmlfile.empty() || mname.empty() || bname.empty() || tname.empty()) {
 		CcLogFatal("Configuration not provided neither via arguments nor via nameserver");
@@ -179,11 +179,10 @@ int main(int argc, char** argv) {
 	targets->SetTime(cfgtime.targetmove);
 	targets->Generate(copilot->GetSize());
 
-	logfile = cfggraph.target.logdir + lname;
-	if(targets->Export(logfile)) {
-		CcLogConfigS("Target log file stored at: "<<logfile);
+	if(targets->Export(lname)) {
+		CcLogConfigS("Target log file stored at: "<<lname);
 	} else {
-		CcLogWarningS("Cannot open target log at: "<<logfile);
+		CcLogWarningS("Cannot open target log at: "<<lname);
 	}
 
 	engine->Open();

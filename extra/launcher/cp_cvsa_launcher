@@ -13,6 +13,36 @@ usage(){
 	printf "	-m 		experiment modality [Default: 'offline']\n"
 }
 
+error_handling(){
+	if [ -z $1 ]; then
+		return 0
+	else
+		code=$1
+	fi
+
+	if [ -z $2 ]; then
+		name="Generic"
+	else
+		name=$2
+	fi
+
+	if [ $code -ne 0 ]; then
+		echo "[$NAME] - $name error code: $code: Exit"
+		exit 1
+	fi
+			
+
+}
+
+GetStoreDir(){
+	if [[ -z "${CNBITK_DATA}" ]]; then
+		storedir="$(readlink -e /proc/$(pgrep cl_acquisition)/cwd)"
+	else
+		storedir="${CNBITK_DATA}"
+	fi
+	echo $storedir
+}
+
 block=$DEFAULT_CVSA_BLOCK
 taskset=$DEFAULT_CVSA_TASKSET
 modality=$DEFAULT_CVSA_MODALITY
@@ -64,7 +94,15 @@ fi
 
 subject=$(ccfg_getstring -x $xml -r cnbiconfig -p subject/id)
 if [ "$subject" == "" ]; then
-	echo "[$NAME] - Cannot retrieve subject if" >&2
+	echo "[$NAME] - Cannot retrieve subject id" >&2
+	exit 1
+fi
+
+# Get GDF and log names
+gdfname=$(ccfg_cli -x $xml -M $modality -B $block -T $taskset -a)
+logname=$(ccfg_cli -x $xml -M $modality -B $block -T $taskset -o)
+if [ "$logname" == "" ] || [ "$gdfname" == "" ]; then
+	echo "[$NAME] - Cannot retrieve gdf and log names " >&2
 	exit 1
 fi
 
@@ -74,6 +112,9 @@ echo "[$NAME] - Block:      $block"
 echo "[$NAME] - Taskset:    $taskset"
 echo "[$NAME] - Modality:   $modality"
 echo "[$NAME] - Executable: $executable"
+echo "[$NAME] - GDF:        $gdfname"
+echo "[$NAME] - LOG:        $logname"
+
 
 # Upload all parameters to nameserver 
 echo "[$NAME] - Uploading XML parameters to nameserver"
@@ -85,10 +126,36 @@ else
 	echo "[$NAME] - Unknown modality" >&2
 	exit 1
 fi
+error_handling $? cl_init
 
+cl_rpc storeconfig $block subject $subject
+error_handling $? cl_rpc
+
+storedir=$(GetStoreDir)
+targetlog=$storedir"/"$gdfname".target.log"
+cl_rpc storeconfig $block logname $targetlog
+
+# Open GDF and log files
+echo "[$NAME] - Opening GDF and log files"
+logline=$(ccfg_cli -x $xml -M $modality -t $block -T $taskset -l)
+logline="${logline%\"}"
+logline="${logline#\"}"
+cl_rpc openxdf $gdfname".gdf" $logname "$logline"
+
+
+# Launching the executable protocol
+echo "[$NAME] - Launching executable protocol: $executable"
+$executable
+
+sleep 2
+
+echo "[$NAME] - Closing GDF file"
+cl_rpc closexdf
 
 
 # Unload configuration from nameserver
 cl_init -u -B $block
+cl_rpc eraseconfig $block subject 
+cl_rpc eraseconfig $block logname
 
 

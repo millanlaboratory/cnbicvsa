@@ -64,5 +64,6 @@ src/cnbicvsa.pc
 extra/Makefile
 extra/icons/Makefile
 extra/xml/Makefile
+extra/launcher/Makefile
 tests/Makefile])
 AC_OUTPUT

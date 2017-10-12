@@ -1,2 +1,3 @@
 SUBDIRS = icons/ \
-		  xml/
+		  xml/	\
+		  launcher/
