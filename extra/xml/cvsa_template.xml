@@ -24,10 +24,10 @@
 		<feedbackmax>5000.00</feedbackmax>
 		<boom>1000.00</boom>
 		<targetmin>500.00</targetmin>
-		<targetmax>1500.00</targetmax>
-		<targethit>1000.00</targethit>
-		<targetmove>1000.00</targetmove>
-		<targetstop>200.00</targetstop>
+		<targetmax>2500.00</targetmax>
+		<targethit>100.00</targethit>
+		<targetmove>1000.00</targetmove>	<!-- mandatory for neglect protocols -->
+		<targetstop>1000.00</targetstop>	
 		<timeout>10000.00</timeout>
 	</timings>
 	

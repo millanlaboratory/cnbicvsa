@@ -283,27 +283,11 @@ int main(int argc, char** argv) {
 		idm.SetEvent(cfgevent.targethit + cTargetEvt + cfgevent.off);
 		id.SetMessage(&ids);
 
-		// Target Move
-		CcTime::Sleep(50.0f);	
-		idm.SetEvent(cfgevent.targetmove + cTargetEvt);
-		id.SetMessage(&ids);
-		while(quit == false) {
-			if(targets->ToCenter(cTargetId) == true)
-				break;
-		}
-		idm.SetEvent(cfgevent.targetmove + cTargetEvt + cfgevent.off);
-		id.SetMessage(&ids);
-
-		// Target Stop
-		idm.SetEvent(cfgevent.targetstop + cTargetEvt);
-		id.SetMessage(&ids);
+		targets->Reset();
 		CcTime::Sleep(cfgtime.targetstop);
-		idm.SetEvent(cfgevent.targetstop + cTargetEvt + cfgevent.off);
-		id.SetMessage(&ids);
 
 		// Resetting
 		feedback->Reset();
-		targets->Reset();
 		targets->Next();
 		copilot->Next();
 	}

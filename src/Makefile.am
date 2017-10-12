@@ -34,8 +34,16 @@ cvsa_offline_LDADD = -lcnbicore 	\
 					 -lcnbidraw 	\
 					 $(top_builddir)/src/libcnbicvsa.la
 
-cvsa_neglect_offline_SOURCES = cvsa_neglect_offline.cpp
-cvsa_neglect_offline_LDADD = -lcnbicore -ldrawtk -lcnbidraw $(top_builddir)/src/libcnbicvsa.la
+cvsa_neglect_offline_SOURCES = cvsa_neglect_offline.cpp cvsa_utilities.hpp
+cvsa_neglect_offline_LDADD = -lcnbicore 	\
+					 		 -lcnbiloop 	\
+					 		 -ltobicore 	\
+					 		 -ltobiid 		\
+					 		 -llpttrigger 	\
+					 		 -lcnbiconfig 	\
+					 		 -ldrawtk 		\
+					 		 -lcnbidraw 	\
+					 		 $(top_builddir)/src/libcnbicvsa.la
 
 noinst_PROGRAMS = sandbox infinitebar
 sandbox_SOURCES = sandbox.cpp
